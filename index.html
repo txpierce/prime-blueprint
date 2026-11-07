@@ -29,7 +29,6 @@
             </div>
             <div class="flex items-center space-x-1.5">
                 <button onclick="openOnboardingModal()" class="text-[11px] bg-blue-950/80 hover:bg-blue-900 text-blue-400 px-2.5 py-1.5 rounded-lg font-extrabold border border-blue-700/50 transition">👤 Profile</button>
-                <button onclick="exportCSV()" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2 py-1.5 rounded-lg font-bold border border-slate-800 transition">📥 CSV</button>
                 <button onclick="exportBackupJSON()" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-blue-400 px-2 py-1.5 rounded-lg font-bold border border-slate-800 transition">📤 Backup</button>
                 <button onclick="triggerRestoreJSON()" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2 py-1.5 rounded-lg font-bold border border-slate-800 transition">📥 Restore</button>
                 <input type="file" id="jsonFileInput" accept=".json" onchange="restoreBackupJSON(event)" class="hidden">
@@ -44,9 +43,6 @@
                 <button onclick="switchTab('peptides')" id="btn-peptides" class="tab-btn px-4 py-1.5 rounded-xl text-xs font-bold transition bg-slate-900 text-slate-400 hover:text-white border border-slate-800">Biohack & Peptides</button>
                 <button onclick="switchTab('nutrition')" id="btn-nutrition" class="tab-btn px-4 py-1.5 rounded-xl text-xs font-bold transition bg-slate-900 text-slate-400 hover:text-white border border-slate-800">Nutrition OS</button>
             </div>
-            <button onclick="generateBadge()" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md hover:brightness-110 transition flex items-center gap-1 whitespace-nowrap">
-                📸 Share Badge
-            </button>
         </nav>
     </header>
 
@@ -61,10 +57,10 @@
                     <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
                     <span id="liveDateTime" class="font-bold text-slate-200">Loading protocol clock...</span>
                 </div>
-                <span class="text-[9px] font-extrabold uppercase text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">SYSTEM ACTIVE</span>
+                <span id="apiStatusBadge" class="text-[9px] font-extrabold uppercase text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">CONNECTING TO GOOGLE SHEET...</span>
             </div>
 
-            <!-- 🔥 CONSISTENCY STREAK BANNER -->
+            <!-- CONSISTENCY STREAK BANNER -->
             <div class="bg-gradient-to-r from-blue-950/60 via-slate-900 to-slate-950 border border-blue-500/40 rounded-2xl p-3.5 shadow-xl flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <span class="text-2xl">⚡</span>
@@ -74,17 +70,6 @@
                     </div>
                 </div>
                 <span id="streakBadge" class="text-[10px] font-black bg-slate-800 text-slate-400 px-2.5 py-1 rounded-xl border border-slate-700">START TODAY</span>
-            </div>
-
-            <!-- RESUME / NEXT WORKOUT BANNER -->
-            <div id="resumeBanner" class="hidden bg-slate-950 border border-blue-500/40 rounded-2xl p-3.5 shadow-xl flex items-center justify-between">
-                <div>
-                    <span id="resumeStatusTag" class="text-[9px] font-extrabold uppercase bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">Quick Launch</span>
-                    <h4 id="resumeText" class="font-bold text-xs text-slate-100 mt-1">Phase 1 • Week 1 • Day 1</h4>
-                </div>
-                <button id="resumeBtn" onclick="jumpToLastWorkout()" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-xl font-extrabold text-xs shadow-md transition flex items-center gap-1 electric-glow">
-                    ⚡ Resume Lift
-                </button>
             </div>
 
             <!-- CLIENT PROFILE CARD -->
@@ -102,9 +87,9 @@
             <!-- METRICS SUMMARY GRID -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg text-center">
-                    <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Phase Progress</span>
-                    <span id="dashPhaseSets" class="text-xl font-black text-blue-400">0 / 0 Sets</span>
-                    <span id="dashPhasePct" class="block text-[10px] text-cyan-400 font-bold mt-0.5">0% Completed</span>
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Target Calories</span>
+                    <span id="dashMacroKcal" class="text-base font-black text-slate-100">2,800 kcal</span>
+                    <span id="dashMacroSplit" class="block text-[10px] text-blue-400 font-bold mt-0.5">200P / 315C / 80F</span>
                 </div>
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg text-center">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Active Phase</span>
@@ -112,9 +97,9 @@
                     <span id="dashActiveWeek" class="block text-[10px] text-blue-400 font-bold mt-0.5">Week 1</span>
                 </div>
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg text-center">
-                    <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Personalized Target</span>
-                    <span id="dashMacroKcal" class="text-base font-black text-slate-100">2,800 kcal</span>
-                    <span id="dashMacroSplit" class="block text-[10px] text-blue-400 font-bold mt-0.5">200P / 315C / 80F</span>
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Program Engine</span>
+                    <span class="text-xs font-extrabold text-cyan-400">Google Sheets API</span>
+                    <span class="block text-[10px] text-blue-400 font-bold mt-0.5">Dynamic Percentage 1RM</span>
                 </div>
             </div>
 
@@ -160,16 +145,10 @@
 
             <!-- SAVE ENTRY BUTTON GROUP -->
             <div class="pt-1">
-                <div class="flex gap-2">
-                    <button onclick="saveAllDailyEntries()" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs py-3.5 px-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-1.5 electric-glow">
-                        <span>💾</span>
-                        <span>Save Daily Entry & Sync</span>
-                    </button>
-                    <button onclick="openHistoryModal()" class="bg-slate-900 hover:bg-slate-800 text-blue-400 border border-slate-800 font-extrabold text-xs py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-1.5 whitespace-nowrap">
-                        <span>📜</span>
-                        <span>View History</span>
-                    </button>
-                </div>
+                <button onclick="saveAllDailyEntries()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs py-3.5 px-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-1.5 electric-glow">
+                    <span>💾</span>
+                    <span>Save Daily Entry & Sync to Sheet</span>
+                </button>
                 <div id="saveNotification" class="text-center text-[10px] text-blue-400 font-bold mt-1.5 h-4"></div>
             </div>
 
@@ -194,7 +173,11 @@
                 </div>
             </div>
 
-            <div id="workoutContainer" class="space-y-3"></div>
+            <div id="workoutContainer" class="space-y-3">
+                <div class="text-center py-8 text-xs text-blue-400 font-bold animate-pulse">
+                    ⚡ Loading workout program live from Google Sheets backend...
+                </div>
+            </div>
 
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-2">
                 <h3 class="font-bold text-slate-100 text-xs tracking-wide flex items-center gap-2"><span class="text-blue-500">📝</span> Session Review Notes</h3>
@@ -209,22 +192,9 @@
                     <h2 class="font-extrabold text-slate-100 text-sm flex items-center gap-2">
                         <span class="text-blue-500">🥩</span> Macro Targets & Dynamic Fueling
                     </h2>
-                    <span id="nutritionHeaderBadge" class="text-[10px] font-bold bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">~2,800 kcal</span>
                 </div>
-
-                <div class="flex items-center justify-between border-t border-slate-800 pt-2.5">
-                    <div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Caloric & Macro Mode</span>
-                        <p class="text-[9px] text-slate-400">Toggle training days vs active recovery days</p>
-                    </div>
-                    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 gap-1">
-                        <button onclick="setMacroMode('training')" id="btnMacroTraining" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-blue-600 text-white shadow">🏋️ Training Day</button>
-                        <button onclick="setMacroMode('rest')" id="btnMacroRest" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white">🥩 Rest Day</button>
-                    </div>
-                </div>
+                <p class="text-[11px] text-slate-300">Caloric blueprint dynamically adjusted for training vs recovery days.</p>
             </div>
-
-            <div id="dynamicNutritionCards" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"></div>
         </div>
 
         <!-- BIOHACK & PEPTIDES TAB -->
@@ -251,27 +221,6 @@
                     <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
                         <span class="block text-[10px] text-slate-400">Draw (100u)</span>
                         <span id="reta_draw" class="font-bold text-blue-400">5.0 units</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                    <h3 class="font-bold text-xs text-slate-100">2. BPC-157 / TB-500 Blend (10 mg)</h3>
-                    <span class="text-[10px] bg-blue-500/10 text-blue-400 font-bold px-2 py-0.5 rounded border border-blue-500/20">Target: 500 mcg</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs text-center">
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="block text-[10px] text-slate-400 mb-1">BAC (mL)</span>
-                        <input type="number" id="bpc_bac" value="2.0" step="0.1" oninput="calcPeptides()" class="w-full bg-slate-900 text-center rounded p-1 font-bold text-blue-400">
-                    </div>
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="block text-[10px] text-slate-400">Conc.</span>
-                        <span id="bpc_conc" class="font-bold text-slate-200">5.00 mg/mL</span>
-                    </div>
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="block text-[10px] text-slate-400">Draw (100u)</span>
-                        <span id="bpc_draw" class="font-bold text-blue-400">10.0 units</span>
                     </div>
                 </div>
             </div>
@@ -351,23 +300,9 @@
         </div>
     </div>
 
-    <!-- HISTORY MODAL -->
-    <div id="historyModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-        <div class="bg-slate-900 border-2 border-blue-500/80 rounded-3xl p-4 sm:p-5 max-w-lg w-full shadow-2xl space-y-3 text-slate-100 my-auto max-h-[85vh] flex flex-col">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                <div>
-                    <span class="text-[9px] font-extrabold uppercase bg-blue-600 text-white px-2 py-0.5 rounded tracking-widest">PRIME LOGS</span>
-                    <h2 class="font-black text-base text-slate-100 mt-1">DAILY HISTORY TIMELINE</h2>
-                </div>
-                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white text-lg font-bold px-2 py-1">✕</button>
-            </div>
-            <div id="historyListContainer" class="overflow-y-auto space-y-2.5 pr-1 flex-1 no-scrollbar"></div>
-            <button onclick="closeHistoryModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold py-2 rounded-xl border border-slate-700">Close History</button>
-        </div>
-    </div>
-
+    <!-- SCRIPT LOADER -->
     <script>
-        // LIVE GOOGLE APPS SCRIPT BACKEND API URL:
+        // LIVE GOOGLE APPS SCRIPT BACKEND URL
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqYMe6knGuEY7SD0nR2NNlWtRbrIP-5f5YvEfb3Mdy7laHcEnEfkotOKTsR5pP3od3Pw/exec";
 
         let PROGRAM_DATA = {};
@@ -382,49 +317,47 @@
             loadHydration();
             loadCheckinScores();
             updateStreakDisplay();
-            updateDynamicNutrition();
             calcPeptides();
 
-            let loadedFromSheet = false;
-
-            // 1. Try pulling live program from Google Sheets API
-            if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('http')) {
-                try {
-                    const res = await fetch(GOOGLE_SCRIPT_URL);
-                    if (res.ok) {
-                        const sheetData = await res.json();
-                        if (sheetData && !sheetData.status && Object.keys(sheetData).length > 0) {
-                            PROGRAM_DATA = sheetData;
-                            populatePhases();
-                            loadedFromSheet = true;
-                            console.log('✅ Loaded live workout program from Google Sheets API!');
-                        }
-                    }
-                } catch (e) {
-                    console.log('⚠️ Could not fetch from Google Sheets API, trying fallback JSON...');
-                }
-            }
-
-            // 2. Fallback to local program_data-v3.json
-            if (!loadedFromSheet) {
-                try {
-                    const res = await fetch('program_data-v3.json?v=' + Date.now());
-                    if (res.ok) {
-                        PROGRAM_DATA = await res.json();
-                        populatePhases();
-                        console.log('⚡ Loaded fallback local program_data-v3.json');
-                    }
-                } catch (e) {
-                    console.error('Error loading program data JSON');
-                }
-            }
+            // PULL WORKOUTS LIVE FROM GOOGLE SHEETS API
+            await fetchProgramFromGoogleSheet();
         });
+
+        async function fetchProgramFromGoogleSheet() {
+            const badge = document.getElementById('apiStatusBadge');
+            try {
+                const res = await fetch(GOOGLE_SCRIPT_URL);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && !data.status && Object.keys(data).length > 0) {
+                        PROGRAM_DATA = data;
+                        populatePhases();
+                        if (badge) {
+                            badge.textContent = "LIVE SHEET SYNCED";
+                            badge.className = "text-[9px] font-extrabold uppercase text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40";
+                        }
+                        return;
+                    }
+                }
+                throw new Error("Invalid payload from Google Sheets script");
+            } catch (err) {
+                console.error("Error fetching from Google Sheets API:", err);
+                if (badge) {
+                    badge.textContent = "SHEET SYNC ERROR";
+                    badge.className = "text-[9px] font-extrabold uppercase text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40";
+                }
+                document.getElementById('workoutContainer').innerHTML = `
+                    <div class="bg-red-950/50 border border-red-800/60 rounded-2xl p-4 text-center text-xs text-red-300">
+                        <p class="font-bold">⚠️ Could not load workouts from Google Sheets backend.</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Make sure you ran 'testSetup' in Google Apps Script and deployed as 'Anyone'.</p>
+                    </div>
+                `;
+            }
+        }
 
         function checkOnboarding() {
             const profile = localStorage.getItem('prime_client_profile');
-            if (!profile) {
-                openOnboardingModal();
-            }
+            if (!profile) openOnboardingModal();
         }
 
         function openOnboardingModal() {
@@ -440,33 +373,29 @@
                 benchMax: parseFloat(document.getElementById('ob_bench').value) || 225,
                 ohpMax: parseFloat(document.getElementById('ob_ohp').value) || 135,
                 squatMax: parseFloat(document.getElementById('ob_squat').value) || 315,
-                rdlMax: parseFloat(document.getElementById('ob_rdl').value) || 275,
-                wakeTime: '04:00',
-                liftTime: '05:00'
+                rdlMax: parseFloat(document.getElementById('ob_rdl').value) || 275
             };
 
             localStorage.setItem('prime_client_profile', JSON.stringify(profile));
             document.getElementById('onboardingModal').classList.add('hidden');
             loadProfileHeader();
 
-            if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('http')) {
-                fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'ONBOARDING', ...profile })
-                }).catch(e => console.log('Syncing onboarding...'));
-            }
+            // Sync profile to Client_Profiles tab in Google Sheet
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'ONBOARDING', ...profile })
+            }).catch(e => console.log('Profile sync queued...'));
         }
 
         function loadProfileHeader() {
             const p = JSON.parse(localStorage.getItem('prime_client_profile'));
             if (!p) return;
-
             const nameEl = document.getElementById('clientHeaderName');
             const detEl = document.getElementById('clientHeaderDetails');
             if (nameEl) nameEl.textContent = `Welcome, ${p.clientName}`;
-            if (detEl) detEl.textContent = `${p.weight} lbs • ${p.goal.toUpperCase()} TRACK • Prime Blueprint Protocol`;
+            if (detEl) detEl.textContent = `${p.weight} lbs • ${p.goal.toUpperCase()} TRACK • Prime Blueprint`;
 
             let kcal = Math.round(p.weight * (p.goal === 'hypertrophy' ? 16 : p.goal === 'recomp' ? 14 : 12));
             const kcalEl = document.getElementById('dashMacroKcal');
@@ -491,46 +420,34 @@
                     joints: document.getElementById('scoreJoints')?.value || '-',
                     sleep: document.getElementById('scoreSleep')?.value || '-'
                 },
-                sessionNotes: document.getElementById('sessionNotes')?.value || '',
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                sessionNotes: document.getElementById('sessionNotes')?.value || ''
             };
 
             let historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
             historyLog[todayStr] = dailyEntry;
             localStorage.setItem('tx_daily_history_log', JSON.stringify(historyLog));
-
             updateStreakDisplay();
 
-            if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('http')) {
-                fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dailyEntry)
-                }).catch(e => console.log('Syncing log...'));
-            }
+            // Sync log to Client_Daily_Logs tab in Google Sheet
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dailyEntry)
+            }).catch(e => console.log('Daily log sync queued...'));
 
             const notif = document.getElementById('saveNotification');
             if (notif) {
-                notif.textContent = `Entry locked & synced to Master Sheet for ${todayStr}!`;
+                notif.textContent = `Daily Entry Synced to Google Sheet for ${todayStr}!`;
                 setTimeout(() => notif.textContent = '', 3000);
             }
         }
 
         function updateStreakDisplay() {
             const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
-            const today = new Date().toLocaleDateString('en-CA');
             let streak = Object.keys(historyLog).length;
-
             const streakText = document.getElementById('streakText');
-            const streakBadge = document.getElementById('streakBadge');
             if (streakText) streakText.textContent = `${streak}-Day Protocol Streak`;
-            if (streakBadge) {
-                streakBadge.textContent = historyLog[today] ? "LOCKED IN ⚡" : "DUE TODAY";
-                streakBadge.className = historyLog[today] 
-                    ? "text-[10px] font-black bg-blue-600 text-white px-2.5 py-1 rounded-xl shadow electric-glow"
-                    : "text-[10px] font-black bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-xl border border-blue-500/40 animate-pulse";
-            }
         }
 
         function populatePhases() {
@@ -542,16 +459,11 @@
                 opt.value = p; opt.textContent = p;
                 sel.appendChild(opt);
             });
-
-            const savedP = localStorage.getItem('tx_last_phase');
-            if (savedP && PROGRAM_DATA[savedP]) sel.value = savedP;
             onPhaseChange();
         }
 
         function onPhaseChange() {
             currentPhase = document.getElementById('phaseSelect').value;
-            localStorage.setItem('tx_last_phase', currentPhase);
-
             const sel = document.getElementById('weekSelect');
             if (!sel) return;
             sel.innerHTML = '';
@@ -562,17 +474,12 @@
                     sel.appendChild(opt);
                 });
             }
-
-            const savedW = localStorage.getItem('tx_last_week');
-            if (savedW && PROGRAM_DATA[currentPhase]?.[savedW]) sel.value = savedW;
             onWeekChange();
         }
 
         function onWeekChange() {
             currentPhase = document.getElementById('phaseSelect').value;
             currentWeek = document.getElementById('weekSelect').value;
-            localStorage.setItem('tx_last_week', currentWeek);
-
             const sel = document.getElementById('daySelect');
             if (!sel) return;
             sel.innerHTML = '';
@@ -583,9 +490,6 @@
                     sel.appendChild(opt);
                 });
             }
-
-            const savedD = localStorage.getItem('tx_last_day');
-            if (savedD && PROGRAM_DATA[currentPhase]?.[currentWeek]?.[savedD]) sel.value = savedD;
             renderWorkout();
         }
 
@@ -594,31 +498,10 @@
             currentWeek = document.getElementById('weekSelect').value;
             currentDay = document.getElementById('daySelect').value;
 
-            localStorage.setItem('tx_last_phase', currentPhase);
-            localStorage.setItem('tx_last_week', currentWeek);
-            localStorage.setItem('tx_last_day', currentDay);
-
             const exercises = PROGRAM_DATA[currentPhase]?.[currentWeek]?.[currentDay] || [];
             const container = document.getElementById('workoutContainer');
             if (!container) return;
             container.innerHTML = '';
-
-            const isRecoveryDay = currentDay.toLowerCase().includes('recovery') || currentDay.toLowerCase().includes('mobility') || currentDay.toLowerCase().includes('off') || currentDay.toLowerCase().includes('rest');
-
-            if (isRecoveryDay) {
-                container.innerHTML += `
-                    <div class="bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-950 border border-blue-500/50 rounded-2xl p-4 shadow-xl space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[9px] font-extrabold uppercase bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/30">Active Recovery Protocol</span>
-                            <span class="text-[10px] text-slate-400 font-bold">Joint Restoration & CNS Reset</span>
-                        </div>
-                        <h3 class="font-extrabold text-sm text-slate-100 flex items-center gap-2">
-                            <span>🧘</span> Active Recovery & Joint-Mobility Checklist
-                        </h3>
-                        <p class="text-[11px] text-slate-300">Complete these targeted mobility drills, low-intensity cardio, and tissue therapy protocols to restore joint fluid and optimize recovery.</p>
-                    </div>
-                `;
-            }
 
             exercises.forEach((ex, exIdx) => {
                 const sets = parseInt(ex.Sets) || 1;
@@ -626,16 +509,12 @@
 
                 for (let s = 1; s <= sets; s++) {
                     const checkKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_s${s}`;
-                    const weightKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_wt_s${s}`;
-                    
                     const checked = localStorage.getItem(checkKey) === 'true';
-                    const savedWeight = localStorage.getItem(weightKey) || '';
 
                     checksHtml += `
                         <div class="flex items-center space-x-1.5 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800 text-[10px]">
                             <span class="font-bold text-blue-400">S${s}</span>
                             <input type="checkbox" ${checked ? 'checked' : ''} onchange="localStorage.setItem('${checkKey}', this.checked)">
-                            <input type="number" placeholder="${ex.Wt || 'lbs'}" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value)" class="w-16 bg-slate-900 border border-slate-700 rounded text-center text-blue-300 font-bold focus:outline-none focus:border-blue-500 py-0.5 text-[10px]">
                         </div>
                     `;
                 }
@@ -645,7 +524,7 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-1 shadow-lg">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-extrabold text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">${ex.Series || 'Ex'}</span>
-                            <span class="text-[11px] text-slate-400 font-semibold">Target: <strong class="text-slate-200">${ex.Wt || 'BW'}</strong></span>
+                            <span class="text-[11px] text-slate-400 font-semibold">Calculated Weight: <strong class="text-blue-400 font-bold">${ex.Wt || 'BW'}</strong></span>
                         </div>
                         <h4 class="font-bold text-slate-100 text-xs">${ex.Exercise || 'Exercise'}</h4>
                         <div class="flex justify-between text-[11px] text-slate-400">
@@ -658,35 +537,6 @@
             });
         }
 
-        function setMacroMode(mode) {
-            localStorage.setItem('tx_macro_mode', mode);
-            updateDynamicNutrition();
-        }
-
-        function updateDynamicNutrition() {
-            const mode = localStorage.getItem('tx_macro_mode') || 'training';
-            const btnT = document.getElementById('btnMacroTraining');
-            const btnR = document.getElementById('btnMacroRest');
-            if (btnT && btnR) {
-                if (mode === 'rest') {
-                    btnR.className = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-blue-600 text-white shadow";
-                    btnT.className = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white";
-                } else {
-                    btnT.className = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-blue-600 text-white shadow";
-                    btnR.className = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white";
-                }
-            }
-        }
-
-        function calcPeptides() {
-            const rBac = parseFloat(document.getElementById('reta_bac')?.value) || 2.0;
-            const bBac = parseFloat(document.getElementById('bpc_bac')?.value) || 2.0;
-            if (document.getElementById('reta_conc')) document.getElementById('reta_conc').textContent = (10 / rBac).toFixed(2) + ' mg/mL';
-            if (document.getElementById('reta_draw')) document.getElementById('reta_draw').textContent = (250 / ((10 / rBac) * 10)).toFixed(1) + ' u';
-            if (document.getElementById('bpc_conc')) document.getElementById('bpc_conc').textContent = (10 / bBac).toFixed(2) + ' mg/mL';
-            if (document.getElementById('bpc_draw')) document.getElementById('bpc_draw').textContent = (500 / ((10 / bBac) * 10)).toFixed(1) + ' u';
-        }
-
         function startRestTimer(seconds) {
             stopRestTimer();
             timerSecondsRemaining = seconds;
@@ -696,11 +546,8 @@
 
             timerInterval = setInterval(() => {
                 timerSecondsRemaining--;
-                if (timerSecondsRemaining <= 0) {
-                    stopRestTimer();
-                } else {
-                    updateTimerDisplay();
-                }
+                if (timerSecondsRemaining <= 0) stopRestTimer();
+                else updateTimerDisplay();
             }, 1000);
         }
 
@@ -708,8 +555,7 @@
             const mins = Math.floor(timerSecondsRemaining / 60);
             const secs = timerSecondsRemaining % 60;
             const str = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            const el = document.getElementById('timerCountdownText');
-            if (el) el.textContent = str;
+            document.getElementById('timerCountdownText').textContent = str;
         }
 
         function stopRestTimer() {
@@ -767,6 +613,12 @@
             localStorage.setItem('tx_notes', document.getElementById('sessionNotes').value);
         }
 
+        function calcPeptides() {
+            const rBac = parseFloat(document.getElementById('reta_bac')?.value) || 2.0;
+            if (document.getElementById('reta_conc')) document.getElementById('reta_conc').textContent = (10 / rBac).toFixed(2) + ' mg/mL';
+            if (document.getElementById('reta_draw')) document.getElementById('reta_draw').textContent = (250 / ((10 / rBac) * 10)).toFixed(1) + ' u';
+        }
+
         function exportBackupJSON() {
             let backupObj = {};
             for (let i = 0; i < localStorage.length; i++) {
@@ -776,7 +628,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
@@ -787,7 +639,7 @@
         }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files[0];
+            const file = event.target.files;
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -801,14 +653,6 @@
                 }
             };
             reader.readAsText(file);
-        }
-
-        function openHistoryModal() {
-            document.getElementById('historyModal').classList.remove('hidden');
-        }
-
-        function closeHistoryModal() {
-            document.getElementById('historyModal').classList.add('hidden');
         }
     </script>
 </body>
