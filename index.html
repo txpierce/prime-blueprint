@@ -294,6 +294,7 @@
                     <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 gap-1">
                         <button onclick="setMacroMode('training')" id="btnNutrTraining" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-blue-600 text-white shadow">🏋️ Training Day</button>
                         <button onclick="setMacroMode('rest')" id="btnNutrRest" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white">🥩 Rest Day</button>
+                        <button onclick="setMacroMode('refeed')" id="btnNutrRefeed" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white">⚡ Refeed Day</button>
                     </div>
                 </div>
             </div>
@@ -708,9 +709,9 @@
             if (document.getElementById('dash_bodyWeight')) document.getElementById('dash_bodyWeight').value = p.weight || 190;
 
             const mode = localStorage.getItem('tx_macro_mode') || 'training';
-            const kcal = mode === 'rest' ? (p.restKcal || Math.round(p.weight * 13.5)) : (p.trainingKcal || Math.round(p.weight * 16));
+            const preset = getMacroPreset(mode);
             const kcalEl = document.getElementById('dashMacroKcal');
-            if (kcalEl) kcalEl.textContent = `${kcal} kcal (${mode.toUpperCase()})`;
+            if (kcalEl) kcalEl.textContent = `${preset.kcal} kcal (${mode.toUpperCase()})`;
         }
 
         function updateDailyWeight(val) {
@@ -1110,32 +1111,51 @@
             });
         }
 
-        // NUTRITION & DYNAMIC MACRO ENGINE
+        // MACRO PRESETS & DYNAMIC CALENDAR ENGINE
+        function getMacroPreset(mode) {
+            const saved = localStorage.getItem('tx_macro_preset_' + mode);
+            if (saved) return JSON.parse(saved);
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || { weight: 190, goal: 'hypertrophy' };
+            const w = p.weight || 190;
+            if (mode === 'rest') {
+                const kcal = Math.round(w * (p.goal === 'hypertrophy' ? 13.5 : p.goal === 'recomp' ? 12 : 10));
+                return { kcal, p: 35, c: 30, f: 35 };
+            } else if (mode === 'refeed') {
+                const kcal = Math.round(w * (p.goal === 'hypertrophy' ? 18 : p.goal === 'recomp' ? 16 : 14));
+                return { kcal, p: 25, c: 55, f: 20 };
+            } else { // training
+                const kcal = Math.round(w * (p.goal === 'hypertrophy' ? 16 : p.goal === 'recomp' ? 14 : 12));
+                return { kcal, p: 30, c: 45, f: 25 };
+            }
+        }
+
         function setMacroMode(mode) {
             localStorage.setItem('tx_macro_mode', mode);
 
-            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || { weight: 190, goal: 'hypertrophy' };
-            let kcal = 2800;
-            let pctP = 30, pctC = 45, pctF = 25;
+            const btnT = document.getElementById('btnNutrTraining');
+            const btnR = document.getElementById('btnNutrRest');
+            const btnRef = document.getElementById('btnNutrRefeed');
 
-            if (mode === 'rest') {
-                kcal = Math.round(p.weight * (p.goal === 'hypertrophy' ? 13.5 : p.goal === 'recomp' ? 12 : 10));
-                pctP = 35; pctC = 30; pctF = 35;
-            } else {
-                kcal = Math.round(p.weight * (p.goal === 'hypertrophy' ? 16 : p.goal === 'recomp' ? 14 : 12));
-                pctP = 30; pctC = 45; pctF = 25;
-            }
+            const activeClass = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-blue-600 text-white shadow";
+            const inactiveClass = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white";
 
-            if (document.getElementById('custom_kcal')) document.getElementById('custom_kcal').value = kcal;
-            if (document.getElementById('custom_pct_p')) document.getElementById('custom_pct_p').value = pctP;
-            if (document.getElementById('custom_pct_c')) document.getElementById('custom_pct_c').value = pctC;
-            if (document.getElementById('custom_pct_f')) document.getElementById('custom_pct_f').value = pctF;
+            if (btnT) btnT.className = mode === 'training' ? activeClass : inactiveClass;
+            if (btnR) btnR.className = mode === 'rest' ? activeClass : inactiveClass;
+            if (btnRef) btnRef.className = mode === 'refeed' ? activeClass : inactiveClass;
 
-            updateCustomMacros();
+            const preset = getMacroPreset(mode);
+
+            if (document.getElementById('custom_kcal')) document.getElementById('custom_kcal').value = preset.kcal;
+            if (document.getElementById('custom_pct_p')) document.getElementById('custom_pct_p').value = preset.p;
+            if (document.getElementById('custom_pct_c')) document.getElementById('custom_pct_c').value = preset.c;
+            if (document.getElementById('custom_pct_f')) document.getElementById('custom_pct_f').value = preset.f;
+
+            updateCustomMacros(false);
             loadProfileHeader();
         }
 
-        function updateCustomMacros() {
+        function updateCustomMacros(saveToPreset = true) {
+            const mode = localStorage.getItem('tx_macro_mode') || 'training';
             const kcal = parseFloat(document.getElementById('custom_kcal')?.value) || 2800;
             const pctP = parseFloat(document.getElementById('custom_pct_p')?.value) || 30;
             const pctC = parseFloat(document.getElementById('custom_pct_c')?.value) || 45;
@@ -1154,13 +1174,16 @@
             const carbGrams = Math.round((kcal * (pctC / 100)) / 4);
             const fatGrams = Math.round((kcal * (pctF / 100)) / 9);
 
-            localStorage.setItem('tx_custom_macro_settings', JSON.stringify({ kcal, pctP, pctC, pctF, proteinGrams, carbGrams, fatGrams }));
+            if (saveToPreset) {
+                const presetData = { kcal, p: pctP, c: pctC, f: pctF, proteinGrams, carbGrams, fatGrams };
+                localStorage.setItem('tx_macro_preset_' + mode, JSON.stringify(presetData));
+            }
 
             const container = document.getElementById('nutritionCardsContainer');
             if (container) {
                 container.innerHTML = `
                     <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-center">
-                        <span class="block text-[9px] text-slate-400 font-bold uppercase mb-1">Calories</span>
+                        <span class="block text-[9px] text-slate-400 font-bold uppercase mb-1">Calories (${mode.toUpperCase()})</span>
                         <span class="text-base font-black text-blue-400">${kcal}</span>
                         <span class="block text-[9px] text-slate-400 mt-0.5">kcal / day</span>
                     </div>
@@ -1181,22 +1204,13 @@
                     </div>
                 `;
             }
+
+            renderMacroCalendar();
         }
 
         function renderNutrition() {
             const mode = localStorage.getItem('tx_macro_mode') || 'training';
-            const savedCustom = JSON.parse(localStorage.getItem('tx_custom_macro_settings'));
-
-            if (savedCustom) {
-                if (document.getElementById('custom_kcal')) document.getElementById('custom_kcal').value = savedCustom.kcal || 2800;
-                if (document.getElementById('custom_pct_p')) document.getElementById('custom_pct_p').value = savedCustom.pctP || 30;
-                if (document.getElementById('custom_pct_c')) document.getElementById('custom_pct_c').value = savedCustom.pctC || 45;
-                if (document.getElementById('custom_pct_f')) document.getElementById('custom_pct_f').value = savedCustom.pctF || 25;
-            } else {
-                setMacroMode(mode);
-            }
-
-            updateCustomMacros();
+            setMacroMode(mode);
 
             // Render Dynamic Meal Schedule Checklist
             const todayStr = new Date().toLocaleDateString('en-CA');
@@ -1236,15 +1250,14 @@
             const saved = localStorage.getItem('tx_weekly_macro_plan');
             if (saved) return JSON.parse(saved);
             
-            // Default 7-day template: Mon/Tue/Thu/Fri = Training Day, Wed/Sat = Rest Day, Sun = Refeed Day
             const defaults = {
-                'Mon': { mode: 'training', kcal: 2800, p: 30, c: 45, f: 25 },
-                'Tue': { mode: 'training', kcal: 2800, p: 30, c: 45, f: 25 },
-                'Wed': { mode: 'rest', kcal: 2300, p: 35, c: 30, f: 35 },
-                'Thu': { mode: 'training', kcal: 2800, p: 30, c: 45, f: 25 },
-                'Fri': { mode: 'training', kcal: 2800, p: 30, c: 45, f: 25 },
-                'Sat': { mode: 'rest', kcal: 2300, p: 35, c: 30, f: 35 },
-                'Sun': { mode: 'refeed', kcal: 3100, p: 25, c: 55, f: 20 }
+                'Mon': 'training',
+                'Tue': 'training',
+                'Wed': 'rest',
+                'Thu': 'training',
+                'Fri': 'training',
+                'Sat': 'rest',
+                'Sun': 'refeed'
             };
             localStorage.setItem('tx_weekly_macro_plan', JSON.stringify(defaults));
             return defaults;
@@ -1259,7 +1272,8 @@
             const todayName = new Date().toLocaleDateString('en-US', { weekday: 'short' });
 
             WEEK_DAYS.forEach(day => {
-                const dayPlan = plan[day] || { mode: 'training', kcal: 2800, p: 30, c: 45, f: 25 };
+                const dayMode = typeof plan[day] === 'string' ? plan[day] : (plan[day]?.mode || 'training');
+                const dayPreset = getMacroPreset(dayMode);
                 const isToday = day === todayName;
 
                 grid.innerHTML += `
@@ -1270,14 +1284,14 @@
                         </div>
 
                         <select onchange="updateCalendarDay('${day}', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded text-[9px] font-extrabold text-blue-300 p-1">
-                            <option value="training" ${dayPlan.mode === 'training' ? 'selected' : ''}>🏋️ Training</option>
-                            <option value="rest" ${dayPlan.mode === 'rest' ? 'selected' : ''}>🥩 Rest</option>
-                            <option value="refeed" ${dayPlan.mode === 'refeed' ? 'selected' : ''}>⚡ Refeed</option>
+                            <option value="training" ${dayMode === 'training' ? 'selected' : ''}>🏋️ Training</option>
+                            <option value="rest" ${dayMode === 'rest' ? 'selected' : ''}>🥩 Rest</option>
+                            <option value="refeed" ${dayMode === 'refeed' ? 'selected' : ''}>⚡ Refeed</option>
                         </select>
 
                         <div class="text-[9px] text-slate-400 space-y-0.5 pt-0.5">
-                            <div class="flex justify-between"><span class="text-slate-500">Kcal:</span><strong class="text-slate-200">${dayPlan.kcal}</strong></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Split:</span><strong class="text-cyan-400">${dayPlan.p}/${dayPlan.c}/${dayPlan.f}</strong></div>
+                            <div class="flex justify-between"><span class="text-slate-500">Kcal:</span><strong class="text-slate-200">${dayPreset.kcal}</strong></div>
+                            <div class="flex justify-between"><span class="text-slate-500">Split:</span><strong class="text-cyan-400">${dayPreset.p}/${dayPreset.c}/${dayPreset.f}</strong></div>
                         </div>
                     </div>
                 `;
@@ -1286,17 +1300,7 @@
 
         function updateCalendarDay(day, mode) {
             const plan = getWeeklyPlan();
-            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || { weight: 190 };
-            const w = p.weight || 190;
-
-            if (mode === 'rest') {
-                plan[day] = { mode: 'rest', kcal: Math.round(w * 12), p: 35, c: 30, f: 35 };
-            } else if (mode === 'refeed') {
-                plan[day] = { mode: 'refeed', kcal: Math.round(w * 18), p: 25, c: 55, f: 20 };
-            } else {
-                plan[day] = { mode: 'training', kcal: Math.round(w * 16), p: 30, c: 45, f: 25 };
-            }
-
+            plan[day] = mode;
             localStorage.setItem('tx_weekly_macro_plan', JSON.stringify(plan));
             renderMacroCalendar();
         }
@@ -1680,7 +1684,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files;
+            const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
