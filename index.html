@@ -10,7 +10,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030712; color: #f8fafc; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        input[type="checkbox"] { accent-color: #3b82f6; }
+        input[type="checkbox"] { accent-color: #3b82f6; width: 1.1rem; height: 1.1rem; cursor: pointer; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .electric-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.35); }
@@ -69,7 +69,9 @@
                         <p id="streakSub" class="text-[10px] text-slate-300">Complete today's workout & tap 'Save Daily Entry' to advance your streak!</p>
                     </div>
                 </div>
-                <span id="streakBadge" class="text-[10px] font-black bg-slate-800 text-slate-400 px-2.5 py-1 rounded-xl border border-slate-700">START TODAY</span>
+                <button onclick="openIgStoryModal()" class="text-[10px] font-black bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-3 py-1.5 rounded-xl border border-pink-500/40 shadow flex items-center gap-1 transition">
+                    <span>📸</span> Share IG Post
+                </button>
             </div>
 
             <!-- CLIENT PROFILE CARD -->
@@ -82,6 +84,37 @@
                     </div>
                     <button onclick="openOnboardingModal()" class="text-[10px] bg-blue-600 hover:bg-blue-500 text-white font-extrabold px-3 py-1.5 rounded-xl transition shadow">Edit Profile</button>
                 </div>
+            </div>
+
+            <!-- DASHBOARD WIDGETS GRID -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                
+                <!-- NEXT FUELING WINDOW WIDGET -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg space-y-2">
+                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block flex items-center gap-1">⏰ Next Fueling Window</span>
+                    <div id="dashFuelingWidget" class="bg-slate-950 p-2.5 rounded-xl border border-slate-800/80">
+                        <span class="text-xs font-bold text-slate-200 block">Loading timing schedule...</span>
+                    </div>
+                </div>
+
+                <!-- TODAY'S PEPTIDES STATUS WIDGET -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg space-y-2">
+                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block flex items-center gap-1">🧪 Today's Biohack Protocol</span>
+                    <div id="dashPeptidesWidget" class="space-y-1 text-xs">
+                        <span class="text-slate-400 text-[11px]">Loading compounds...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- A-SERIES LIFTS PRs WIDGET -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-2">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <h3 class="font-extrabold text-xs text-slate-100 flex items-center gap-1.5">
+                        <span class="text-blue-500">🏆</span> A-Series Primary Strength Maxes (1RMs)
+                    </h3>
+                    <span class="text-[9px] text-blue-400 font-bold bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">PROFILE & LOG SYNCED</span>
+                </div>
+                <div id="dashPrGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs pt-1"></div>
             </div>
 
             <!-- METRICS SUMMARY GRID -->
@@ -192,7 +225,7 @@
                     <div>
                         <span class="text-[9px] font-extrabold uppercase bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">Client Macro Architecture</span>
                         <h2 class="font-black text-sm text-slate-100 mt-1 flex items-center gap-2">
-                            <span>🥩</span> Dynamic Fueling Strategy
+                            <span>🥩</span> Dynamic Fueling & Timing Clock
                         </h2>
                     </div>
                     <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 gap-1">
@@ -200,29 +233,37 @@
                         <button onclick="setMacroMode('rest')" id="btnNutrRest" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white">🥩 Rest Day</button>
                     </div>
                 </div>
-                <p class="text-[11px] text-slate-300">Macros automatically calibrate based on client body weight, goal track, and workout vs recovery days.</p>
+                <p class="text-[11px] text-slate-300">Set wake-up and workout times to auto-calculate optimal meal timing windows.</p>
+            </div>
+
+            <!-- WAKE UP & WORKOUT TIMING INPUTS -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+                <h3 class="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                    <span class="text-blue-500">⏱️</span> Daily Schedule Timings
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Wake-Up Time</label>
+                        <input type="time" id="nutr_wakeTime" value="06:00" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Workout / Lift Time</label>
+                        <input type="time" id="nutr_liftTime" value="07:30" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
             </div>
 
             <div id="nutritionCardsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs"></div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-2">
-                <h3 class="font-bold text-slate-100 text-xs tracking-wide flex items-center gap-2">
-                    <span class="text-blue-500">⏰</span> Peri-Workout Meal Fueling Clock
-                </h3>
-                <div class="space-y-2 text-[11px] text-slate-300">
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="font-bold text-blue-400">Meal 1 (Pre-Lift - 60m prior):</span> Fast-acting carbs + 30g whey/egg protein for intra-workout glycogen loading.
-                    </div>
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="font-bold text-blue-400">Meal 2 (Post-Lift Anabolic Window):</span> 40g lean protein + high-GI carbs to spike insulin & drive nutrients into muscle tissue.
-                    </div>
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="font-bold text-blue-400">Meal 3 (Mid-Day Sustained):</span> Complex carbs (rice/oats) + high-micronutrient greens + healthy omega-3 fats.
-                    </div>
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="font-bold text-blue-400">Meal 4 (Night Time Recovery):</span> Slow-digesting casein/beef protein + magnesium & zinc for nocturnal GH release.
-                    </div>
+            <!-- MEAL TIMING & CHECKLIST CONTAINER -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-slate-100 text-xs tracking-wide flex items-center gap-2">
+                        <span class="text-blue-500">⏰</span> Meal Timing & Completion Tracker
+                    </h3>
+                    <span id="mealCompletionCount" class="text-[10px] font-extrabold text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">0 / 4 Completed</span>
                 </div>
+                <div id="mealScheduleList" class="space-y-2.5 text-[11px] text-slate-300"></div>
             </div>
         </div>
 
@@ -231,7 +272,7 @@
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex items-center justify-between">
                 <div>
                     <h2 class="font-extrabold text-slate-100 text-sm flex items-center gap-2"><span class="text-blue-500">🧪</span> Biohack & Peptide Protocol Manager</h2>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Manage custom compounds, BAC dilution math, dosing, and administration schedules.</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Manage custom compounds, BAC dilution math, dosing, and daily intake logging.</p>
                 </div>
                 <button onclick="openPeptideModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-3 py-2 rounded-xl transition shadow electric-glow">+ Add Compound</button>
             </div>
@@ -271,6 +312,16 @@
                             <option value="recomp">Body Recomp</option>
                             <option value="fatloss">Accelerated Fat Loss</option>
                         </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Wake Time</label>
+                        <input type="time" id="ob_wakeTime" value="06:00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Workout / Lift Time</label>
+                        <input type="time" id="ob_liftTime" value="07:30" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
                     </div>
                 </div>
                 <div class="border-t border-slate-800 pt-2 space-y-2">
@@ -330,6 +381,53 @@
         </div>
     </div>
 
+    <!-- INSTAGRAM STORY / STAT CARD SHARE MODAL -->
+    <div id="igStoryModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-slate-900 border-2 border-pink-500/60 rounded-3xl p-4 max-w-sm w-full shadow-2xl space-y-3 text-slate-100 my-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <span class="text-[9px] font-extrabold uppercase bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2.5 py-0.5 rounded tracking-widest">INSTAGRAM STORY STAT CARD</span>
+                <button onclick="closeIgStoryModal()" class="text-slate-400 hover:text-white font-bold text-base">✕</button>
+            </div>
+
+            <!-- PREVIEW CARD VIEW -->
+            <div id="igPreviewCard" class="bg-gradient-to-b from-slate-950 via-blue-950 to-slate-950 border-2 border-blue-500/40 rounded-2xl p-4 space-y-3 text-center shadow-2xl relative overflow-hidden">
+                <div class="flex items-center justify-between text-[10px] text-blue-400 font-black tracking-wider uppercase border-b border-blue-900/50 pb-2">
+                    <span>⚡ PRIME BLUEPRINT OS</span>
+                    <span id="igDateText">NOV 07, 2026</span>
+                </div>
+                <div class="py-1">
+                    <span id="igClientName" class="text-lg font-black text-white tracking-wide block">ATHLETE</span>
+                    <span id="igStreakBadge" class="text-[10px] font-extrabold bg-blue-600 text-white px-3 py-1 rounded-full inline-block mt-1 shadow electric-glow">⚡ 5-DAY PROTOCOL STREAK</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-[10px] text-left">
+                    <div class="bg-slate-900/80 border border-blue-900/40 p-2 rounded-xl">
+                        <span class="text-slate-400 block font-bold">HYDRATION</span>
+                        <span id="igHydration" class="text-xs font-black text-cyan-400">100% (1 Gal)</span>
+                    </div>
+                    <div class="bg-slate-900/80 border border-blue-900/40 p-2 rounded-xl">
+                        <span class="text-slate-400 block font-bold">FUELING TARGET</span>
+                        <span id="igMacros" class="text-xs font-black text-blue-400">2,800 kcal</span>
+                    </div>
+                    <div class="bg-slate-900/80 border border-blue-900/40 p-2 rounded-xl">
+                        <span class="text-slate-400 block font-bold">BENCH 1RM</span>
+                        <span id="igBench" class="text-xs font-black text-white">225 lbs</span>
+                    </div>
+                    <div class="bg-slate-900/80 border border-blue-900/40 p-2 rounded-xl">
+                        <span class="text-slate-400 block font-bold">RECOVERY SCORE</span>
+                        <span id="igRecovery" class="text-xs font-black text-cyan-400">5/5 PUMP</span>
+                    </div>
+                </div>
+                <div class="pt-1 text-[9px] font-extrabold text-slate-400 tracking-widest uppercase">
+                    HIGH-PERFORMANCE ARCHITECTURE & BIOHACK OS
+                </div>
+            </div>
+
+            <button onclick="downloadIgStatCard()" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5 electric-glow">
+                <span>📥</span> Download Story Image (.png)
+            </button>
+        </div>
+    </div>
+
     <!-- FLOATING REST TIMER WIDGET -->
     <div id="floatingTimerWidget" class="fixed bottom-0 left-0 right-0 z-50 p-2 bg-slate-950/95 backdrop-blur-md border-t border-blue-900/40 shadow-2xl">
         <div class="max-w-3xl mx-auto flex items-center justify-between px-2 gap-2">
@@ -372,6 +470,7 @@
             loadHydration();
             loadCheckinScores();
             updateStreakDisplay();
+            renderDashboardWidgets();
             renderPeptides();
             renderNutrition();
 
@@ -426,14 +525,17 @@
             if (p.ohpMax) document.getElementById('ob_ohp').value = p.ohpMax;
             if (p.squatMax) document.getElementById('ob_squat').value = p.squatMax;
             if (p.rdlMax) document.getElementById('ob_rdl').value = p.rdlMax;
+            if (p.wakeTime) document.getElementById('ob_wakeTime').value = p.wakeTime;
+            if (p.liftTime) document.getElementById('ob_liftTime').value = p.liftTime;
             document.getElementById('onboardingModal').classList.remove('hidden');
         }
 
         function saveOnboardingProfile() {
             const weight = parseFloat(document.getElementById('ob_weight').value) || 190;
             const goal = document.getElementById('ob_goal').value || 'hypertrophy';
-            
-            // Dynamic Macro Targets Calculation
+            const wakeTime = document.getElementById('ob_wakeTime').value || '06:00';
+            const liftTime = document.getElementById('ob_liftTime').value || '07:30';
+
             let tKcal = Math.round(weight * (goal === 'hypertrophy' ? 16 : goal === 'recomp' ? 14 : 12));
             let rKcal = Math.round(weight * (goal === 'hypertrophy' ? 13.5 : goal === 'recomp' ? 12 : 10));
 
@@ -446,13 +548,20 @@
                 ohpMax: parseFloat(document.getElementById('ob_ohp').value) || 135,
                 squatMax: parseFloat(document.getElementById('ob_squat').value) || 315,
                 rdlMax: parseFloat(document.getElementById('ob_rdl').value) || 275,
+                wakeTime: wakeTime,
+                liftTime: liftTime,
                 trainingKcal: tKcal,
                 restKcal: rKcal
             };
 
             localStorage.setItem('prime_client_profile', JSON.stringify(profile));
             document.getElementById('onboardingModal').classList.add('hidden');
+            
+            if (document.getElementById('nutr_wakeTime')) document.getElementById('nutr_wakeTime').value = wakeTime;
+            if (document.getElementById('nutr_liftTime')) document.getElementById('nutr_liftTime').value = liftTime;
+
             loadProfileHeader();
+            renderDashboardWidgets();
             renderNutrition();
             if (PROGRAM_DATA && Object.keys(PROGRAM_DATA).length > 0) renderWorkout();
 
@@ -472,7 +581,7 @@
             const nameEl = document.getElementById('clientHeaderName');
             const detEl = document.getElementById('clientHeaderDetails');
             if (nameEl) nameEl.textContent = `Welcome, ${p.clientName}`;
-            if (detEl) detEl.textContent = `${p.weight} lbs • ${p.goal.toUpperCase()} TRACK • Prime Blueprint Protocol`;
+            if (detEl) detEl.textContent = `${p.weight} lbs • ${p.goal.toUpperCase()} TRACK • Prime Blueprint`;
 
             const mode = localStorage.getItem('tx_macro_mode') || 'training';
             const kcal = mode === 'rest' ? (p.restKcal || Math.round(p.weight * 13.5)) : (p.trainingKcal || Math.round(p.weight * 16));
@@ -480,11 +589,23 @@
             if (kcalEl) kcalEl.textContent = `${kcal} kcal (${mode.toUpperCase()})`;
         }
 
+        function saveScheduleTimings() {
+            const wake = document.getElementById('nutr_wakeTime')?.value || '06:00';
+            const lift = document.getElementById('nutr_liftTime')?.value || '07:30';
+
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            p.wakeTime = wake;
+            p.liftTime = lift;
+            localStorage.setItem('prime_client_profile', JSON.stringify(p));
+
+            renderNutrition();
+            renderDashboardWidgets();
+        }
+
         function saveAllDailyEntries() {
             const todayStr = new Date().toLocaleDateString('en-CA');
             const profile = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
 
-            // Collect set logs from current exercise workout screen
             const setLogs = [];
             const exercises = PROGRAM_DATA[currentPhase]?.[currentWeek]?.[currentDay] || [];
             exercises.forEach((ex, exIdx) => {
@@ -506,6 +627,21 @@
                 }
             });
 
+            // Peptides status log
+            const peptides = getPeptides();
+            const peptidesDone = peptides.map(p => {
+                const checked = localStorage.getItem(`pep_done_${todayStr}_${p.id}`) === 'true';
+                return { id: p.id, name: p.name, dose: p.dose, completed: checked };
+            });
+
+            // Meals completed log
+            const mealCheckedCount = [1,2,3,4].filter(m => localStorage.getItem(`meal_done_${todayStr}_${m}`) === 'true').length;
+
+            const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
+            historyLog[todayStr] = { date: todayStr, logged: true };
+            localStorage.setItem('tx_daily_history_log', JSON.stringify(historyLog));
+            updateStreakDisplay();
+
             const dailyEntry = {
                 type: 'DAILY_LOG',
                 date: todayStr,
@@ -515,22 +651,21 @@
                 week: currentWeek || 'Week 1',
                 day: currentDay || 'Day 1',
                 waterPercentage: parseInt(localStorage.getItem('tx_hydration')) || 0,
-                mealsCompleted: '5/5',
+                mealsCompleted: `${mealCheckedCount}/4 Meals`,
                 recoveryScores: {
                     pump: document.getElementById('scorePump')?.value || '-',
                     joints: document.getElementById('scoreJoints')?.value || '-',
                     sleep: document.getElementById('scoreSleep')?.value || '-'
                 },
                 sessionNotes: document.getElementById('sessionNotes')?.value || '',
+                wakeTime: profile.wakeTime || '06:00',
+                liftTime: profile.liftTime || '07:30',
+                peptidesDone: peptidesDone,
+                streak: Object.keys(historyLog).length,
                 setLogs: setLogs
             };
 
-            let historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
-            historyLog[todayStr] = dailyEntry;
-            localStorage.setItem('tx_daily_history_log', JSON.stringify(historyLog));
-            updateStreakDisplay();
-
-            // Sync daily entry + per-client set logs to Apps Script
+            // Sync to Apps Script
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -550,6 +685,74 @@
             let streak = Object.keys(historyLog).length;
             const streakText = document.getElementById('streakText');
             if (streakText) streakText.textContent = `${streak}-Day Protocol Streak`;
+        }
+
+        function renderDashboardWidgets() {
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            const todayStr = new Date().toLocaleDateString('en-CA');
+
+            // 1. A-Series Lifts PR Grid
+            const prGrid = document.getElementById('dashPrGrid');
+            if (prGrid) {
+                prGrid.innerHTML = `
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <span class="text-[9px] text-slate-400 block font-bold">BENCH PRESS</span>
+                        <span class="text-xs font-black text-blue-400">${p.benchMax || 225} lbs</span>
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <span class="text-[9px] text-slate-400 block font-bold">OVERHEAD PRESS</span>
+                        <span class="text-xs font-black text-cyan-400">${p.ohpMax || 135} lbs</span>
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <span class="text-[9px] text-slate-400 block font-bold">SQUAT 1RM</span>
+                        <span class="text-xs font-black text-blue-400">${p.squatMax || 315} lbs</span>
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <span class="text-[9px] text-slate-400 block font-bold">ROMANIAN DL</span>
+                        <span class="text-xs font-black text-cyan-400">${p.rdlMax || 275} lbs</span>
+                    </div>
+                `;
+            }
+
+            // 2. Next Fueling Window Widget
+            const liftTime = p.liftTime || '07:30';
+            const fuelingEl = document.getElementById('dashFuelingWidget');
+            if (fuelingEl) {
+                fuelingEl.innerHTML = `
+                    <div class="flex items-center justify-between text-xs">
+                        <div>
+                            <span class="text-slate-400 block text-[9px] uppercase font-bold">Post-Lift Anabolic Window</span>
+                            <span class="font-extrabold text-blue-400">Meal 2 @ ${liftTime} + 45m</span>
+                        </div>
+                        <span class="bg-blue-500/10 text-blue-400 text-[9px] font-black px-2 py-1 rounded border border-blue-500/20">PRE-LOGGED</span>
+                    </div>
+                `;
+            }
+
+            // 3. Today's Peptides Widget
+            const peptides = getPeptides();
+            const pepWidget = document.getElementById('dashPeptidesWidget');
+            if (pepWidget) {
+                pepWidget.innerHTML = '';
+                if (peptides.length === 0) {
+                    pepWidget.innerHTML = '<span class="text-slate-400 text-[11px]">No active compounds.</span>';
+                } else {
+                    peptides.forEach(item => {
+                        const checked = localStorage.getItem(`pep_done_${todayStr}_${item.id}`) === 'true';
+                        pepWidget.innerHTML += `
+                            <div class="flex items-center justify-between bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800">
+                                <div>
+                                    <span class="font-bold text-slate-200 block text-[10px]">${item.name}</span>
+                                    <span class="text-[9px] text-slate-400">${item.dose} mcg • ${item.sched || 'Daily'}</span>
+                                </div>
+                                <span class="text-[9px] font-black px-2 py-0.5 rounded ${checked ? 'bg-cyan-950 text-cyan-400 border border-cyan-800' : 'bg-slate-900 text-slate-400'}">
+                                    ${checked ? 'TAKEN ⚡' : 'PENDING'}
+                                </span>
+                            </div>
+                        `;
+                    });
+                }
+            }
         }
 
         function populatePhases() {
@@ -614,7 +817,6 @@
                     const weightKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_wt_s${s}`;
                     
                     const checked = localStorage.getItem(checkKey) === 'true';
-                    // Pre-fill with recommended target weight (ex.Wt) if user hasn't explicitly typed a custom weight yet
                     const targetWeight = ex.Wt || 'BW';
                     const savedWeight = localStorage.getItem(weightKey) !== null ? localStorage.getItem(weightKey) : targetWeight;
 
@@ -645,7 +847,7 @@
             });
         }
 
-        // NUTRITION OS ARCHITECTURE
+        // NUTRITION & TIMING OS
         function setMacroMode(mode) {
             localStorage.setItem('tx_macro_mode', mode);
             loadProfileHeader();
@@ -653,8 +855,11 @@
         }
 
         function renderNutrition() {
-            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || { weight: 190, goal: 'hypertrophy' };
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || { weight: 190, goal: 'hypertrophy', wakeTime: '06:00', liftTime: '07:30' };
             const mode = localStorage.getItem('tx_macro_mode') || 'training';
+
+            if (document.getElementById('nutr_wakeTime')) document.getElementById('nutr_wakeTime').value = p.wakeTime || '06:00';
+            if (document.getElementById('nutr_liftTime')) document.getElementById('nutr_liftTime').value = p.liftTime || '07:30';
 
             const btnT = document.getElementById('btnNutrTraining');
             const btnR = document.getElementById('btnNutrRest');
@@ -678,38 +883,79 @@
             const carbs = Math.round((kcal - (protein * 4 + fat * 9)) / 4);
 
             const container = document.getElementById('nutritionCardsContainer');
-            if (!container) return;
+            if (container) {
+                container.innerHTML = `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Calories</span>
+                        <span class="text-base font-black text-blue-400">${kcal}</span>
+                        <span class="block text-[9px] text-slate-400 mt-0.5">kcal / day</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Protein</span>
+                        <span class="text-base font-black text-cyan-400">${protein}g</span>
+                        <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(protein*4)} kcal (${Math.round((protein*4/kcal)*100)}%)</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Carbohydrates</span>
+                        <span class="text-base font-black text-slate-100">${carbs}g</span>
+                        <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(carbs*4)} kcal (${Math.round((carbs*4/kcal)*100)}%)</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
+                        <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Healthy Fats</span>
+                        <span class="text-base font-black text-blue-300">${fat}g</span>
+                        <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(fat*9)} kcal (${Math.round((fat*9/kcal)*100)}%)</span>
+                    </div>
+                `;
+            }
 
-            container.innerHTML = `
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
-                    <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Calories</span>
-                    <span class="text-base font-black text-blue-400">${kcal}</span>
-                    <span class="block text-[9px] text-slate-400 mt-0.5">kcal / day</span>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
-                    <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Protein</span>
-                    <span class="text-base font-black text-cyan-400">${protein}g</span>
-                    <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(protein*4)} kcal (${Math.round((protein*4/kcal)*100)}%)</span>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
-                    <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Carbohydrates</span>
-                    <span class="text-base font-black text-slate-100">${carbs}g</span>
-                    <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(carbs*4)} kcal (${Math.round((carbs*4/kcal)*100)}%)</span>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
-                    <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Healthy Fats</span>
-                    <span class="text-base font-black text-blue-300">${fat}g</span>
-                    <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(fat*9)} kcal (${Math.round((fat*9/kcal)*100)}%)</span>
-                </div>
-            `;
+            // Render Meal Schedule Checklist
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            const mealList = document.getElementById('mealScheduleList');
+            if (mealList) {
+                const liftTimeStr = p.liftTime || '07:30';
+                const meals = [
+                    { id: 1, title: 'Meal 1 (Pre-Workout Intra Glycogen)', time: `${liftTimeStr} (60m prior)`, desc: 'Fast-acting carbs + 30g whey/egg protein for workout glycogen loading.' },
+                    { id: 2, title: 'Meal 2 (Post-Workout Anabolic Window)', time: `${liftTimeStr} (+45m post)`, desc: '40g lean protein + high-GI carbs to drive nutrients into tissue.' },
+                    { id: 3, title: 'Meal 3 (Mid-Day Sustained Fuel)', time: '13:00 (Mid-Day)', desc: 'Complex carbs (rice/oats) + high-micronutrient greens + omega-3 fats.' },
+                    { id: 4, title: 'Meal 4 (Nocturnal GH & Hormone Repair)', time: '20:00 (Pre-Bed)', desc: 'Slow-digesting casein/beef protein + magnesium & zinc.' }
+                ];
+
+                let checkedCount = 0;
+                mealList.innerHTML = '';
+                meals.forEach(m => {
+                    const checked = localStorage.getItem(`meal_done_${todayStr}_${m.id}`) === 'true';
+                    if (checked) checkedCount++;
+
+                    mealList.innerHTML += `
+                        <div class="flex items-start space-x-3 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleMealCompletion(${m.id}, this.checked)" class="mt-0.5">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-blue-400">${m.title}</span>
+                                    <span class="text-[9px] text-slate-400 font-bold bg-slate-900 px-2 py-0.5 rounded">${m.time}</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-0.5">${m.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const countEl = document.getElementById('mealCompletionCount');
+                if (countEl) countEl.textContent = `${checkedCount} / 4 Completed`;
+            }
         }
 
-        // PEPTIDE & BIOHACK PROTOCOL MANAGER
+        function toggleMealCompletion(mealId, isChecked) {
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            localStorage.setItem(`meal_done_${todayStr}_${mealId}`, isChecked);
+            renderNutrition();
+        }
+
+        // PEPTIDE PROTOCOL MANAGER WITH INTAKE CHECKBOXES
         function getPeptides() {
             const saved = localStorage.getItem('tx_peptide_protocols');
             if (saved) return JSON.parse(saved);
             
-            // Default protocols
             const defaults = [
                 { id: '1', name: 'Retatrutide (GLP-1/GIP/GCG)', mg: 10, bac: 2.0, dose: 250, sched: 'Sun 08:00 (Weekly)' },
                 { id: '2', name: 'BPC-157 / TB-500 Healing Blend', mg: 10, bac: 2.0, dose: 500, sched: 'Daily 08:00 (Morning)' }
@@ -723,17 +969,22 @@
             const container = document.getElementById('peptideListContainer');
             if (!container) return;
             container.innerHTML = '';
+            const todayStr = new Date().toLocaleDateString('en-CA');
 
-            peptides.forEach((item, idx) => {
-                const conc = (item.mg / item.bac).toFixed(2); // mg/mL
-                const drawUnits = ((item.dose / 1000) / (item.mg / item.bac) * 100).toFixed(1); // 100u insulin syringe units
+            peptides.forEach(item => {
+                const conc = (item.mg / item.bac).toFixed(2);
+                const drawUnits = ((item.dose / 1000) / (item.mg / item.bac) * 100).toFixed(1);
+                const checked = localStorage.getItem(`pep_done_${todayStr}_${item.id}`) === 'true';
 
                 container.innerHTML += `
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
                         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                            <div>
-                                <span class="text-[9px] font-extrabold uppercase bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">${item.sched || 'Active Protocol'}</span>
-                                <h3 class="font-bold text-xs text-slate-100 mt-1">${item.name} (${item.mg} mg Vial)</h3>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePeptideTaken('${item.id}', this.checked)">
+                                <div>
+                                    <span class="text-[9px] font-extrabold uppercase bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">${item.sched || 'Active Protocol'}</span>
+                                    <h3 class="font-bold text-xs text-slate-100 mt-1">${item.name} (${item.mg} mg Vial)</h3>
+                                </div>
                             </div>
                             <button onclick="deletePeptide('${item.id}')" class="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1">Delete</button>
                         </div>
@@ -756,13 +1007,15 @@
             });
         }
 
-        function openPeptideModal() {
-            document.getElementById('peptideModal').classList.remove('hidden');
+        function togglePeptideTaken(id, isChecked) {
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            localStorage.setItem(`pep_done_${todayStr}_${id}`, isChecked);
+            renderPeptides();
+            renderDashboardWidgets();
         }
 
-        function closePeptideModal() {
-            document.getElementById('peptideModal').classList.add('hidden');
-        }
+        function openPeptideModal() { document.getElementById('peptideModal').classList.remove('hidden'); }
+        function closePeptideModal() { document.getElementById('peptideModal').classList.add('hidden'); }
 
         function saveCustomPeptide() {
             const name = document.getElementById('pep_name').value || 'Custom Peptide';
@@ -772,27 +1025,12 @@
             const sched = document.getElementById('pep_sched').value || 'Daily';
 
             const peptides = getPeptides();
-            peptides.push({
-                id: Date.now().toString(),
-                name: name,
-                mg: mg,
-                bac: bac,
-                dose: dose,
-                sched: sched
-            });
+            peptides.push({ id: Date.now().toString(), name, mg, bac, dose, sched });
 
             localStorage.setItem('tx_peptide_protocols', JSON.stringify(peptides));
             closePeptideModal();
             renderPeptides();
-
-            // Sync to Google Sheet
-            const profile = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'ONBOARDING', ...profile, peptideProtocols: peptides })
-            }).catch(e => console.log('Peptide protocol synced...'));
+            renderDashboardWidgets();
         }
 
         function deletePeptide(id) {
@@ -800,6 +1038,112 @@
             peptides = peptides.filter(p => p.id !== id);
             localStorage.setItem('tx_peptide_protocols', JSON.stringify(peptides));
             renderPeptides();
+            renderDashboardWidgets();
+        }
+
+        // INSTAGRAM STORY / STAT CARD MODAL & IMAGE GENERATOR
+        function openIgStoryModal() {
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
+            const streak = Object.keys(historyLog).length;
+            const hyd = localStorage.getItem('tx_hydration') || '100';
+            const pump = localStorage.getItem('tx_score_pump') || '5';
+
+            if (document.getElementById('igDateText')) document.getElementById('igDateText').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).toUpperCase();
+            if (document.getElementById('igClientName')) document.getElementById('igClientName').textContent = (p.clientName || 'ATHLETE').toUpperCase();
+            if (document.getElementById('igStreakBadge')) document.getElementById('igStreakBadge').textContent = `⚡ ${streak}-DAY PROTOCOL STREAK`;
+            if (document.getElementById('igHydration')) document.getElementById('igHydration').textContent = `${hyd}% (1 Gal)`;
+            if (document.getElementById('igMacros')) document.getElementById('igMacros').textContent = `${p.weight ? Math.round(p.weight*16) : 2800} kcal`;
+            if (document.getElementById('igBench')) document.getElementById('igBench').textContent = `${p.benchMax || 225} lbs`;
+            if (document.getElementById('igRecovery')) document.getElementById('igRecovery').textContent = `${pump}/5 PUMP SCORE`;
+
+            document.getElementById('igStoryModal').classList.remove('hidden');
+        }
+
+        function closeIgStoryModal() { document.getElementById('igStoryModal').classList.add('hidden'); }
+
+        function downloadIgStatCard() {
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
+            const streak = Object.keys(historyLog).length;
+            const hyd = localStorage.getItem('tx_hydration') || '100';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 1080;
+            canvas.height = 1920; // 9:16 Instagram Story Aspect Ratio
+            const ctx = canvas.getContext('2d');
+
+            // Background Gradient
+            const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+            grad.addColorStop(0, '#030712');
+            grad.addColorStop(0.5, '#0f172a');
+            grad.addColorStop(1, '#0284c7');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 1080, 1920);
+
+            // Card Container Box
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 6;
+            ctx.roundRect(90, 240, 900, 1440, 40);
+            ctx.fill();
+            ctx.stroke();
+
+            // Header Text
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = '900 48px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚡ PRIME BLUEPRINT OS', 540, 360);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 72px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText((p.clientName || 'ATHLETE').toUpperCase(), 540, 480);
+
+            // Streak Badge
+            ctx.fillStyle = '#2563eb';
+            ctx.roundRect(240, 540, 600, 100, 50);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 40px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText(`⚡ ${streak}-DAY PROTOCOL STREAK`, 540, 605);
+
+            // Stat Cards Grid
+            const drawStatBox = (x, y, w, h, label, val) => {
+                ctx.fillStyle = '#030712';
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 4;
+                ctx.roundRect(x, y, w, h, 24);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '700 32px "Plus Jakarta Sans", sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(label, x + 35, y + 60);
+
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = '900 48px "Plus Jakarta Sans", sans-serif';
+                ctx.fillText(val, x + 35, y + 130);
+            };
+
+            drawStatBox(150, 720, 370, 180, 'HYDRATION', `${hyd}% (1 Gal)`);
+            drawStatBox(560, 720, 370, 180, 'DAILY TARGET', `${p.weight ? Math.round(p.weight*16) : 2800} kcal`);
+            drawStatBox(150, 940, 370, 180, 'BENCH 1RM', `${p.benchMax || 225} lbs`);
+            drawStatBox(560, 940, 370, 180, 'SQUAT 1RM', `${p.squatMax || 315} lbs`);
+            drawStatBox(150, 1160, 370, 180, 'OHP 1RM', `${p.ohpMax || 135} lbs`);
+            drawStatBox(560, 1160, 370, 180, 'ROMANIAN DL', `${p.rdlMax || 275} lbs`);
+
+            // Footer Logo
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '700 32px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('HIGH-PERFORMANCE HYPERTROPHY & BIOHACK OS', 540, 1550);
+
+            // Trigger Image Download
+            const link = document.createElement('a');
+            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         }
 
         // REST TIMER WIDGET
@@ -894,9 +1238,7 @@
             dlAnchor.remove();
         }
 
-        function triggerRestoreJSON() {
-            document.getElementById('jsonFileInput').click();
-        }
+        function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
             const file = event.target.files;
