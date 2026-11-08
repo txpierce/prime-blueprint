@@ -755,7 +755,6 @@
         }
 
         function getMealSchedule() {
-            // Live User Inputs from DOM first, then localStorage profile fallback
             const wakeInput = document.getElementById('nutr_wakeTime')?.value;
             const liftInput = document.getElementById('nutr_liftTime')?.value;
 
@@ -797,14 +796,12 @@
                 }
             });
 
-            // Peptides status log
             const peptides = getPeptides();
             const peptidesDone = peptides.map(p => {
                 const checked = localStorage.getItem(`pep_done_${todayStr}_${p.id}`) === 'true';
                 return { id: p.id, name: p.name, dose: p.dose, completed: checked };
             });
 
-            // Meals completed log
             let mealCheckedCount = 0;
             const meals = getMealSchedule();
             meals.forEach(m => {
@@ -844,7 +841,6 @@
                 setLogs: setLogs
             };
 
-            // Sync to Apps Script
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -870,7 +866,6 @@
             const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
             const todayStr = new Date().toLocaleDateString('en-CA');
 
-            // 1. A-Series Lifts PR Grid
             const prGrid = document.getElementById('dashPrGrid');
             if (prGrid) {
                 prGrid.innerHTML = `
@@ -893,7 +888,6 @@
                 `;
             }
 
-            // 2. Next UNCHECKED Fueling Window Widget
             const fuelingEl = document.getElementById('dashFuelingWidget');
             if (fuelingEl) {
                 const meals = getMealSchedule();
@@ -931,7 +925,6 @@
                 }
             }
 
-            // 3. Today's Peptides Widget
             const peptides = getPeptides();
             const pepWidget = document.getElementById('dashPeptidesWidget');
             if (pepWidget) {
@@ -1000,7 +993,6 @@
             renderWorkout();
         }
 
-        // CLEAN REP STRING SANITIZER TO PREVENT DATE PARSING BUGS
         function cleanRepString(val) {
             if (val === null || val === undefined) return '-';
             let str = String(val).trim();
@@ -1017,7 +1009,6 @@
             return str;
         }
 
-        // CLEAN RPE STRING SANITIZER TO PREVENT DATE PARSING BUGS
         function cleanRpeString(val) {
             if (val === null || val === undefined) return '-';
             let str = String(val).trim();
@@ -1041,8 +1032,44 @@
             return str;
         }
 
+        // DYNAMIC 1RM PERCENTAGE-TO-POUNDS ENGINE
+        function calculateWeightFromPct(ex) {
+            if (!ex || !ex.Wt) return 'BW';
+            const wtStr = String(ex.Wt).trim();
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {
+                benchMax: 225, squatMax: 315, ohpMax: 135, rdlMax: 275
+            };
+
+            const pctMatch = wtStr.match(/(\d+(?:\.\d+)?)%/);
+            if (pctMatch) {
+                const pct = parseFloat(pctMatch[1]) / 100.0;
+                const exNameLower = (ex.Exercise || '').toLowerCase();
+                const wtLower = wtStr.toLowerCase();
+
+                let baseMax = p.benchMax || 225;
+
+                if (wtLower.includes('ohp') || exNameLower.includes('ohp') || exNameLower.includes('shoulder') || exNameLower.includes('arnold') || exNameLower.includes('overhead')) {
+                    baseMax = p.ohpMax || 135;
+                } else if (wtLower.includes('squat') || exNameLower.includes('squat') || exNameLower.includes('leg') || exNameLower.includes('lunge')) {
+                    baseMax = p.squatMax || 315;
+                } else if (wtLower.includes('rdl') || exNameLower.includes('rdl') || exNameLower.includes('deadlift') || exNameLower.includes('row') || exNameLower.includes('pull') || exNameLower.includes('curl') || exNameLower.includes('hamstring')) {
+                    baseMax = p.rdlMax || 275;
+                } else if (wtLower.includes('bench') || exNameLower.includes('bench') || exNameLower.includes('press') || exNameLower.includes('chest') || exNameLower.includes('dip') || exNameLower.includes('fly') || exNameLower.includes('tricep') || exNameLower.includes('skull')) {
+                    baseMax = p.benchMax || 225;
+                }
+
+                const calc = Math.round((baseMax * pct) / 5) * 5;
+                return calc > 0 ? calc : 'BW';
+            }
+
+            const numMatch = wtStr.match(/\d+/);
+            if (numMatch) return parseInt(numMatch[0]);
+
+            return wtStr || 'BW';
+        }
+
         // DYNAMIC PHASE-SCOPED WEIGHT ENGINE
-        function getPhaseMaxWeight(phase, exIdx, setNum, defaultWt) {
+        function getPhaseMaxWeight(phase, exIdx, setNum, ex) {
             let maxLogged = 0;
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -1053,7 +1080,9 @@
                     }
                 }
             }
-            return maxLogged > 0 ? `${maxLogged} lbs` : (defaultWt || 'BW');
+            if (maxLogged > 0) return maxLogged;
+
+            return calculateWeightFromPct(ex);
         }
 
         function renderWorkout() {
@@ -1072,6 +1101,11 @@
                 const cleanRpe = cleanRpeString(ex.RPE);
                 const cleanTempo = ex.Tempo || '-';
 
+                const calculatedTarget = calculateWeightFromPct(ex);
+                const displayTargetLabel = typeof calculatedTarget === 'number' 
+                    ? `${calculatedTarget} lbs ${ex.Wt && ex.Wt.includes('%') ? '(' + ex.Wt + ')' : ''}`
+                    : (ex.Wt || 'BW');
+
                 let checksHtml = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">';
 
                 for (let s = 1; s <= sets; s++) {
@@ -1080,8 +1114,8 @@
                     
                     const checked = localStorage.getItem(checkKey) === 'true';
                     
-                    // Dynamic Phase-Scoped Target Weight Lookup
-                    const dynamicTarget = getPhaseMaxWeight(currentPhase, exIdx, s, ex.Wt);
+                    // Dynamic Phase-Scoped Target Weight Lookup (Calculates Math in Lbs!)
+                    const dynamicTarget = getPhaseMaxWeight(currentPhase, exIdx, s, ex);
                     const savedWeight = localStorage.getItem(weightKey) !== null ? localStorage.getItem(weightKey) : dynamicTarget;
 
                     checksHtml += `
@@ -1098,7 +1132,7 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-1 shadow-lg">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-extrabold text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">${ex.Series || 'Ex'}</span>
-                            <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${ex.Wt || 'BW'}</strong></span>
+                            <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${displayTargetLabel}</strong></span>
                         </div>
                         <h4 class="font-bold text-slate-100 text-xs">${ex.Exercise || 'Exercise'}</h4>
                         <div class="flex flex-wrap justify-between items-center text-[11px] text-slate-400 gap-y-1">
@@ -1212,7 +1246,6 @@
             const mode = localStorage.getItem('tx_macro_mode') || 'training';
             setMacroMode(mode);
 
-            // Render Dynamic Meal Schedule Checklist
             const todayStr = new Date().toLocaleDateString('en-CA');
             const mealList = document.getElementById('mealScheduleList');
             if (mealList) {
@@ -1513,10 +1546,9 @@
 
             const canvas = document.createElement('canvas');
             canvas.width = 1080;
-            canvas.height = 1920; // 9:16 Instagram Story Aspect Ratio
+            canvas.height = 1920;
             const ctx = canvas.getContext('2d');
 
-            // Background Gradient
             const grad = ctx.createLinearGradient(0, 0, 0, 1920);
             grad.addColorStop(0, '#030712');
             grad.addColorStop(0.5, '#0f172a');
@@ -1524,7 +1556,6 @@
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, 1080, 1920);
 
-            // Card Container Box
             ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 6;
@@ -1532,7 +1563,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // Header Text
             ctx.fillStyle = '#38bdf8';
             ctx.font = '900 48px "Plus Jakarta Sans", sans-serif';
             ctx.textAlign = 'center';
@@ -1542,7 +1572,6 @@
             ctx.font = '900 72px "Plus Jakarta Sans", sans-serif';
             ctx.fillText((p.clientName || 'ATHLETE').toUpperCase(), 540, 480);
 
-            // Streak Badge
             ctx.fillStyle = '#2563eb';
             ctx.roundRect(240, 540, 600, 100, 50);
             ctx.fill();
@@ -1550,7 +1579,6 @@
             ctx.font = '800 40px "Plus Jakarta Sans", sans-serif';
             ctx.fillText(`⚡ ${streak}-DAY PROTOCOL STREAK`, 540, 605);
 
-            // Stat Cards Grid
             const drawStatBox = (x, y, w, h, label, val) => {
                 ctx.fillStyle = '#030712';
                 ctx.strokeStyle = '#1e293b';
@@ -1576,13 +1604,11 @@
             drawStatBox(150, 1160, 370, 180, 'OHP 1RM', `${p.ohpMax || 135} lbs`);
             drawStatBox(560, 1160, 370, 180, 'ROMANIAN DL', `${p.rdlMax || 275} lbs`);
 
-            // Footer Logo
             ctx.fillStyle = '#94a3b8';
             ctx.font = '700 32px "Plus Jakarta Sans", sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('HIGH-PERFORMANCE HYPERTROPHY & BIOHACK OS', 540, 1550);
 
-            // Trigger Image Download
             const link = document.createElement('a');
             link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')[0]}.png`;
             link.href = canvas.toDataURL('image/png');
@@ -1684,7 +1710,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files[0];
+            const file = event.target.files;
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
