@@ -15,6 +15,12 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .electric-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.35); }
     </style>
+
+    <!-- PWA MANIFEST LINK -->
+    <link rel="manifest" id="manifestLink">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Prime Blueprint">
 </head>
 <body class="min-h-screen pb-24">
 
@@ -28,6 +34,8 @@
                 <p class="text-[10px] text-blue-300/70 font-semibold tracking-wide">High-Performance Training & Biohack OS</p>
             </div>
             <div class="flex items-center space-x-1.5">
+                <button id="pwaInstallBtn" onclick="installPWA()" class="hidden text-[11px] bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-2 py-1.5 rounded-lg font-extrabold border border-cyan-400/50 transition shadow">📲 Install App</button>
+                <button onclick="openPrHistoryModal()" class="text-[11px] bg-amber-950/80 hover:bg-amber-900 text-amber-400 px-2 py-1.5 rounded-lg font-extrabold border border-amber-700/50 transition">🏆 PR Log</button>
                 <button onclick="openOnboardingModal()" class="text-[11px] bg-blue-950/80 hover:bg-blue-900 text-blue-400 px-2.5 py-1.5 rounded-lg font-extrabold border border-blue-700/50 transition">👤 Profile</button>
                 <button onclick="exportBackupJSON()" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-blue-400 px-2 py-1.5 rounded-lg font-bold border border-slate-800 transition">📤 Backup</button>
                 <button onclick="triggerRestoreJSON()" class="text-[11px] bg-slate-900 hover:bg-slate-800 text-slate-200 px-2 py-1.5 rounded-lg font-bold border border-slate-800 transition">📥 Restore</button>
@@ -250,6 +258,21 @@
 
         <!-- WORKOUTS TAB -->
         <div id="tab-workouts" class="tab-content space-y-4">
+            <!-- FATIGUE / LOW RECOVERY BANNER -->
+            <div id="fatigueBanner" class="hidden bg-amber-950/80 border border-amber-500/60 rounded-2xl p-3 shadow-xl flex items-center justify-between text-xs">
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-xl">⚠️</span>
+                    <div>
+                        <span class="font-black text-amber-400 block">Low Recovery Score Detected</span>
+                        <span class="text-[10px] text-slate-300">Auto-suggest -5% target weight reduction to protect joints & recovery?</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <button onclick="applyFatigueAdjustment()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg transition">Apply -5%</button>
+                    <button onclick="dismissFatigueBanner()" class="bg-slate-900 text-slate-400 text-[10px] font-bold px-2 py-1 rounded-lg">Dismiss</button>
+                </div>
+            </div>
+
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-xl">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
@@ -452,6 +475,65 @@
         </div>
     </div>
 
+    <!-- WARM-UP & PLATE CALCULATOR MODAL -->
+    <div id="warmupModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 text-slate-100 my-auto electric-glow">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <span class="text-[9px] font-extrabold uppercase bg-amber-500 text-slate-950 px-2 py-0.5 rounded tracking-widest">PLATE CALCULATOR</span>
+                    <h2 id="warmupExName" class="font-black text-base text-slate-100 mt-1">Exercise Warm-Up</h2>
+                </div>
+                <button onclick="closeWarmupModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800 p-3 rounded-2xl flex items-center justify-between">
+                <div>
+                    <span class="text-[9px] text-slate-400 font-bold block uppercase">Target Working Weight</span>
+                    <span id="warmupTargetWtDisplay" class="text-base font-black text-cyan-400">185 lbs</span>
+                </div>
+                <span class="text-[10px] font-extrabold text-amber-400 bg-amber-950/60 px-2.5 py-1 rounded-xl border border-amber-800/40">45 lb Olympic Bar</span>
+            </div>
+
+            <div class="space-y-2">
+                <span class="text-[10px] font-extrabold text-slate-300 uppercase block tracking-wider">Pyramid Warm-Up Progression</span>
+                <div id="warmupSetsList" class="space-y-2 text-xs"></div>
+            </div>
+
+            <button onclick="closeWarmupModal()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-black text-xs py-3 rounded-xl shadow-lg transition">Done / Ready to Lift ⚡</button>
+        </div>
+    </div>
+
+    <!-- ALL-TIME PR HISTORY & VOLUME LOG MODAL -->
+    <div id="prHistoryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-5 max-w-lg w-full shadow-2xl space-y-4 text-slate-100 my-auto electric-glow">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <span class="text-[9px] font-extrabold uppercase bg-amber-500 text-slate-950 px-2 py-0.5 rounded tracking-widest">PR & VOLUME LOG OS</span>
+                    <h2 class="font-black text-lg text-slate-100 mt-1 flex items-center gap-2">🏆 All-Time PRs & Tonnage</h2>
+                </div>
+                <button onclick="closePrHistoryModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+            </div>
+
+            <div id="prHistorySummaryGrid" class="grid grid-cols-2 gap-2 text-xs">
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center">
+                    <span class="text-[9px] text-slate-400 font-bold block uppercase">Total PR Sets Logged</span>
+                    <span id="prTotalCountDisplay" class="text-base font-black text-amber-400">0</span>
+                </div>
+                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center">
+                    <span class="text-[9px] text-slate-400 font-bold block uppercase">Lifetime Lifted Volume</span>
+                    <span id="prTotalTonnageDisplay" class="text-base font-black text-cyan-400">0 lbs</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="font-bold text-xs text-slate-200">Logged Strength Records:</h4>
+                <div id="prHistoryList" class="max-h-64 overflow-y-auto space-y-1.5 text-xs pr-1 no-scrollbar"></div>
+            </div>
+
+            <button onclick="closePrHistoryModal()" class="w-full bg-slate-950 hover:bg-slate-800 text-slate-200 text-xs font-bold py-2.5 rounded-xl border border-slate-800">Close</button>
+        </div>
+    </div>
+
     <!-- ADD PEPTIDE MODAL -->
     <div id="peptideModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-slate-900 border-2 border-blue-500/80 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 text-slate-100 my-auto electric-glow">
@@ -588,6 +670,7 @@
         let currentHeartRate = 0;
 
         window.addEventListener('DOMContentLoaded', async () => {
+            initPWAManifest();
             startLiveClock();
             checkOnboarding();
             loadProfileHeader();
@@ -760,8 +843,8 @@
         function addMinutesToTime(timeStr, minsToAdd) {
             if (!timeStr) timeStr = '07:30';
             let parts = timeStr.split(':').map(Number);
-            let h = isNaN(parts[0]) ? 7 : parts[0];
-            let m = isNaN(parts[1]) ? 0 : parts[1];
+            let h = isNaN(parts) ? 7 : parts;
+            let m = isNaN(parts) ? 0 : parts;
             
             let totalMins = h * 60 + m + minsToAdd;
             totalMins = (totalMins + 14400) % 1440;
@@ -1104,7 +1187,7 @@
 
             const pctMatch = wtStr.match(/(\d+(?:\.\d+)?)%/);
             if (pctMatch) {
-                const pct = parseFloat(pctMatch[1]) / 100.0;
+                const pct = parseFloat(pctMatch) / 100.0;
                 let baseMax = p.benchMax || 225;
 
                 if (wtLower.includes('ohp') || exNameLower.includes('ohp') || exNameLower.includes('shoulder') || exNameLower.includes('arnold') || exNameLower.includes('overhead')) {
@@ -1123,11 +1206,15 @@
                     calc = Math.round((calc / 2.0) / 5) * 5;
                 }
 
+                const isFatigueActive = localStorage.getItem('tx_fatigue_adj_applied') === 'true';
+                if (isFatigueActive && calc > 0) {
+                    calc = Math.round((calc * 0.95) / 5) * 5;
+                }
                 return { val: calc > 0 ? calc : 'BW', tag: loadTag };
             }
 
             const numMatch = wtStr.match(/\d+/);
-            if (numMatch) return { val: parseInt(numMatch[0]), tag: loadTag };
+            if (numMatch) return { val: parseInt(numMatch), tag: loadTag };
 
             return { val: wtStr || 'BW', tag: loadTag };
         }
@@ -1193,7 +1280,7 @@
                     checksHtml += `
                         <div class="flex items-center space-x-1 bg-slate-950 px-2 py-1.5 rounded-xl border ${isPR ? 'border-amber-500/60 ring-1 ring-amber-500/30' : 'border-slate-800'} text-[10px]">
                             <span class="font-black ${isPR ? 'text-amber-400' : 'text-blue-400'}">S${s}</span>
-                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="localStorage.setItem('${checkKey}', this.checked)">
+                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="onSetCheckChange('${checkKey}', this.checked, ${exIdx}, ${s}, '${ex.Series || ''}', '${ex.Exercise ? ex.Exercise.replace(/'/g, '') : ''}')">
                             <input type="text" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value); renderWorkout();" class="w-full bg-slate-900 border ${isPR ? 'border-amber-500/80 text-amber-300' : 'border-slate-700 text-blue-300'} rounded text-center font-bold focus:outline-none focus:border-blue-500 py-1 text-[10px]">
                             ${prBadge}
                         </div>
@@ -1205,7 +1292,7 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-1 shadow-lg">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-extrabold text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">${ex.Series || 'Ex'}</span>
-                            <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${displayTargetLabel}</strong></span>
+                            <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${displayTargetLabel}</strong><button onclick="openWarmupModal('${ex.Exercise ? ex.Exercise.replace(/'/g, '') : 'Exercise'}', '${calculatedTarget}')" class="text-[9px] bg-slate-950 hover:bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/40 font-bold ml-1.5 transition">🔥 Plates</button></span>
                         </div>
                         <h4 class="font-bold text-slate-100 text-xs">${ex.Exercise || 'Exercise'}</h4>
                         <div class="flex flex-wrap justify-between items-center text-[11px] text-slate-400 gap-y-1">
@@ -1678,7 +1765,7 @@
             ctx.fillText('HIGH-PERFORMANCE HYPERTROPHY & BIOHACK OS', 540, 1550);
 
             const link = document.createElement('a');
-            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')[0]}.png`;
+            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
@@ -1768,7 +1855,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
@@ -1777,7 +1864,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files[0];
+            const file = event.target.files;
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1791,6 +1878,237 @@
                 }
             };
             reader.readAsText(file);
+        }
+
+        // PWA HOME SCREEN INSTALLER ENGINE
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const pwaBtn = document.getElementById('pwaInstallBtn');
+            if (pwaBtn) pwaBtn.classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted PWA install');
+                    }
+                    deferredPrompt = null;
+                    const pwaBtn = document.getElementById('pwaInstallBtn');
+                    if (pwaBtn) pwaBtn.classList.add('hidden');
+                });
+            }
+        }
+
+        function initPWAManifest() {
+            try {
+                const manifestObj = {
+                    "name": "PRIME BLUEPRINT OS",
+                    "short_name": "PrimeBlueprint",
+                    "start_url": "./",
+                    "display": "standalone",
+                    "background_color": "#030712",
+                    "theme_color": "#030712"
+                };
+                const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/json' });
+                const link = document.getElementById('manifestLink');
+                if (link) link.href = URL.createObjectURL(blob);
+            } catch (e) { console.log('PWA manifest initialized'); }
+        }
+
+        // WARM-UP SET & PLATE CALCULATOR
+        function calcPlatesPerSide(totalWt) {
+            const bar = 45;
+            if (totalWt <= bar) return "Bar Only (45 lbs)";
+            let sideWt = (totalWt - bar) / 2.0;
+            const availablePlates = [45, 35, 25, 10, 5, 2.5];
+            const platesUsed = [];
+
+            for (let p of availablePlates) {
+                while (sideWt >= p) {
+                    platesUsed.push(p);
+                    sideWt -= p;
+                }
+            }
+
+            if (platesUsed.length === 0) return "Bar Only (45 lbs)";
+
+            const counts = {};
+            platesUsed.forEach(p => counts[p] = (counts[p] || 0) + 1);
+            const strParts = Object.keys(counts).map(p => `${counts[p]}x${p}lb`);
+            return `${strParts.join(' + ')} / side`;
+        }
+
+        function openWarmupModal(exName, targetWtVal) {
+            const numWt = parseFloat(targetWtVal) || 135;
+            document.getElementById('warmupExName').textContent = exName || 'Exercise Warm-Up';
+            document.getElementById('warmupTargetWtDisplay').textContent = `${numWt} lbs`;
+
+            const listEl = document.getElementById('warmupSetsList');
+            if (!listEl) return;
+
+            const warmups = [
+                { title: 'Set 1 (Empty Bar / Mobility)', pct: 0, reps: 10, wt: 45 },
+                { title: 'Set 2 (Acclimation)', pct: 0.50, reps: 5, wt: Math.max(45, Math.round((numWt * 0.50) / 5) * 5) },
+                { title: 'Set 3 (Potentiation)', pct: 0.75, reps: 3, wt: Math.max(45, Math.round((numWt * 0.75) / 5) * 5) },
+                { title: 'Set 4 (Primer Rep)', pct: 0.90, reps: 1, wt: Math.max(45, Math.round((numWt * 0.90) / 5) * 5) }
+            ];
+
+            listEl.innerHTML = '';
+            warmups.forEach(w => {
+                const platesStr = calcPlatesPerSide(w.wt);
+                listEl.innerHTML += `
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div>
+                            <span class="font-extrabold text-blue-400 block text-[11px]">${w.title}</span>
+                            <span class="text-[10px] text-slate-400 font-bold">${w.reps} reps @ <strong class="text-white">${w.wt} lbs</strong></span>
+                        </div>
+                        <span class="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-1 rounded-lg border border-amber-800/40">${platesStr}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('warmupModal').classList.remove('hidden');
+        }
+
+        function closeWarmupModal() {
+            document.getElementById('warmupModal').classList.add('hidden');
+        }
+
+        // AUTO-START REST TIMER & FATIGUE AUTO-ADJUST
+        function onSetCheckChange(checkKey, isChecked, exIdx, setNum, seriesStr, exNameStr) {
+            localStorage.setItem(checkKey, isChecked);
+
+            if (isChecked) {
+                let restSecs = 90;
+                if (seriesStr.includes('A')) restSecs = 120;
+                else if (seriesStr.includes('B')) restSecs = 90;
+                else if (seriesStr.includes('C') || seriesStr.includes('D')) restSecs = 60;
+
+                startRestTimer(restSecs);
+                checkFatigueAutoAdjust(exIdx, setNum);
+            }
+
+            renderWorkout();
+        }
+
+        function checkFatigueAutoAdjust(exIdx, setNum) {
+            const pump = localStorage.getItem('tx_score_pump');
+            const joints = localStorage.getItem('tx_score_joints');
+            const sleep = localStorage.getItem('tx_score_sleep');
+
+            const isLowRecovery = (pump === '1' || pump === '2' || joints === '1' || joints === '2' || sleep === '1' || sleep === '2');
+            const isFatigueActive = localStorage.getItem('tx_fatigue_adj_applied') === 'true';
+
+            if (isLowRecovery && !isFatigueActive && setNum === 1) {
+                const banner = document.getElementById('fatigueBanner');
+                if (banner) banner.classList.remove('hidden');
+            }
+        }
+
+        function applyFatigueAdjustment() {
+            localStorage.setItem('tx_fatigue_adj_applied', 'true');
+            const banner = document.getElementById('fatigueBanner');
+            if (banner) banner.classList.add('hidden');
+            alert("Fatigue Adjustment (-5% target weights) applied for today's session!");
+            renderWorkout();
+        }
+
+        function dismissFatigueBanner() {
+            const banner = document.getElementById('fatigueBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        // PR HISTORY & VOLUME LOG ENGINE
+        function openPrHistoryModal() {
+            renderPrHistoryList();
+            document.getElementById('prHistoryModal').classList.remove('hidden');
+        }
+
+        function closePrHistoryModal() {
+            document.getElementById('prHistoryModal').classList.add('hidden');
+        }
+
+        function renderPrHistoryList() {
+            let totalPrCount = 0;
+            let totalTonnage = 0;
+            const prItems = [];
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.includes('_wt_s')) {
+                    const wtVal = parseFloat(localStorage.getItem(key));
+                    if (!isNaN(wtVal) && wtVal > 0) {
+                        const parts = key.split('_');
+                        const phase = parts[0] || 'Phase';
+                        const week = parts[1] || 'Week';
+                        const day = parts[2] || 'Day';
+                        const exIdx = parseInt(parts[3]) || 0;
+                        const setNum = parts[5]?.replace('s', '') || '1';
+
+                        const exObj = PROGRAM_DATA[phase]?.[week]?.[day]?.[exIdx];
+                        if (exObj) {
+                            const targetObj = calculateWeightFromPct(exObj);
+                            const targetVal = parseFloat(targetObj.val);
+                            const reps = parseInt(cleanRepString(exObj.Reps)) || 10;
+                            const vol = wtVal * reps;
+                            totalTonnage += vol;
+
+                            if (!isNaN(targetVal) && wtVal > targetVal && typeof targetObj.val === 'number') {
+                                totalPrCount++;
+                                const est1RM = Math.round(wtVal * (1 + reps / 30.0));
+                                prItems.push({
+                                    exercise: exObj.Exercise,
+                                    phase: phase,
+                                    week: week,
+                                    day: day,
+                                    wt: wtVal,
+                                    target: targetVal,
+                                    reps: reps,
+                                    est1RM: est1RM,
+                                    setNum: setNum
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            const countEl = document.getElementById('prTotalCountDisplay');
+            if (countEl) countEl.textContent = totalPrCount;
+
+            const tonEl = document.getElementById('prTotalTonnageDisplay');
+            if (tonEl) tonEl.textContent = `${totalTonnage.toLocaleString()} lbs`;
+
+            const listEl = document.getElementById('prHistoryList');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            if (prItems.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-4 text-slate-400 font-bold text-xs">
+                        No PRs logged yet. Enter a weight higher than your baseline target in any set box to record a PR! 🏆
+                    </div>
+                `;
+            } else {
+                prItems.forEach(item => {
+                    listEl.innerHTML += `
+                        <div class="bg-slate-950 p-2.5 rounded-xl border border-amber-500/40 flex items-center justify-between">
+                            <div>
+                                <span class="font-black text-amber-400 block text-[11px]">${item.exercise}</span>
+                                <span class="text-[10px] text-slate-400 font-bold">${item.phase} • ${item.week} • Set ${item.setNum}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-black text-cyan-400 text-xs block">${item.wt} lbs <span class="text-[9px] text-slate-400 font-semibold">(vs ${item.target} target)</span></span>
+                                <span class="text-[9px] font-bold text-blue-400">Est. 1RM: ${item.est1RM} lbs</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
         }
     </script>
 </body>
