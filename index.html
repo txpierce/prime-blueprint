@@ -443,6 +443,11 @@
                 </div>
             </div>
 
+            <!-- 1-TAP RECALCULATE ALL SETS BUTTON -->
+            <button onclick="recalculateAllSetsToDefaultPct()" class="w-full bg-slate-950 hover:bg-slate-800 text-amber-400 font-extrabold text-xs py-2.5 rounded-xl border border-amber-500/30 transition flex items-center justify-center gap-1.5 mb-2">
+                <span>🔄</span> Recalculate All Sets to Default %
+            </button>
+
             <button onclick="saveOnboardingProfile()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-black py-3 rounded-xl shadow-lg transition electric-glow">Save Profile & Start Blueprint</button>
         </div>
     </div>
@@ -698,6 +703,22 @@
             }).catch(e => console.log('Profile sync queued...'));
         }
 
+        // 1-TAP RECALCULATE ALL SETS TO DEFAULT % ENGINE
+        function recalculateAllSetsToDefaultPct() {
+            if (!confirm("Are you sure you want to reset all logged set weights back to the default 1RM percentage targets?")) return;
+            let count = 0;
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.includes('_wt_s')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(k => { localStorage.removeItem(k); count++; });
+            alert(`Recalculated! ${count} set weight overrides cleared. Targets are now updated to match your new 1RM maxes.`);
+            if (PROGRAM_DATA && Object.keys(PROGRAM_DATA).length > 0) renderWorkout();
+        }
+
         function loadProfileHeader() {
             const p = JSON.parse(localStorage.getItem('prime_client_profile'));
             if (!p) return;
@@ -739,8 +760,8 @@
         function addMinutesToTime(timeStr, minsToAdd) {
             if (!timeStr) timeStr = '07:30';
             let parts = timeStr.split(':').map(Number);
-            let h = isNaN(parts) ? 7 : parts;
-            let m = isNaN(parts) ? 0 : parts;
+            let h = isNaN(parts[0]) ? 7 : parts[0];
+            let m = isNaN(parts[1]) ? 0 : parts[1];
             
             let totalMins = h * 60 + m + minsToAdd;
             totalMins = (totalMins + 14400) % 1440;
@@ -1059,7 +1080,6 @@
 
                 let calc = Math.round((baseMax * pct) / 5) * 5;
 
-                // Check if Dumbbell (DB), Single-Arm / Single-Leg, or Unilateral movement
                 const isDumbbellOrUnilateral = exNameLower.includes('db') || 
                                                exNameLower.includes('dumbbell') || 
                                                exNameLower.includes('single-arm') || 
@@ -1135,15 +1155,20 @@
                     
                     const checked = localStorage.getItem(checkKey) === 'true';
                     
-                    // Dynamic Phase-Scoped Target Weight Lookup (Calculates Math in Lbs with DB split!)
                     const dynamicTarget = getPhaseMaxWeight(currentPhase, exIdx, s, ex);
                     const savedWeight = localStorage.getItem(weightKey) !== null ? localStorage.getItem(weightKey) : dynamicTarget;
 
+                    const numSaved = parseFloat(savedWeight);
+                    const numTarget = parseFloat(calculatedTarget);
+                    const isPR = !isNaN(numSaved) && !isNaN(numTarget) && numSaved > numTarget && typeof calculatedTarget === 'number';
+                    const prBadge = isPR ? '<span class="text-[8px] font-black text-amber-400 bg-amber-950/80 px-1 py-0.5 rounded border border-amber-500/50 whitespace-nowrap ml-1">PR 🏆</span>' : '';
+
                     checksHtml += `
-                        <div class="flex items-center space-x-1.5 bg-slate-950 px-2 py-1.5 rounded-xl border border-slate-800 text-[10px]">
-                            <span class="font-black text-blue-400">S${s}</span>
+                        <div class="flex items-center space-x-1 bg-slate-950 px-2 py-1.5 rounded-xl border ${isPR ? 'border-amber-500/60 ring-1 ring-amber-500/30' : 'border-slate-800'} text-[10px]">
+                            <span class="font-black ${isPR ? 'text-amber-400' : 'text-blue-400'}">S${s}</span>
                             <input type="checkbox" ${checked ? 'checked' : ''} onchange="localStorage.setItem('${checkKey}', this.checked)">
-                            <input type="text" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded text-center text-blue-300 font-bold focus:outline-none focus:border-blue-500 py-1 text-[10px]">
+                            <input type="text" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value); renderWorkout();" class="w-full bg-slate-900 border ${isPR ? 'border-amber-500/80 text-amber-300' : 'border-slate-700 text-blue-300'} rounded text-center font-bold focus:outline-none focus:border-blue-500 py-1 text-[10px]">
+                            ${prBadge}
                         </div>
                     `;
                 }
@@ -1166,7 +1191,6 @@
             });
         }
 
-        // MACRO PRESETS & DYNAMIC CALENDAR ENGINE
         function getMacroPreset(mode) {
             const saved = localStorage.getItem('tx_macro_preset_' + mode);
             if (saved) return JSON.parse(saved);
@@ -1178,7 +1202,7 @@
             } else if (mode === 'refeed') {
                 const kcal = Math.round(w * (p.goal === 'hypertrophy' ? 18 : p.goal === 'recomp' ? 16 : 14));
                 return { kcal, p: 25, c: 55, f: 20 };
-            } else { // training
+            } else {
                 const kcal = Math.round(w * (p.goal === 'hypertrophy' ? 16 : p.goal === 'recomp' ? 14 : 12));
                 return { kcal, p: 30, c: 45, f: 25 };
             }
@@ -1297,7 +1321,6 @@
             }
         }
 
-        // 7-DAY MACRO CALENDAR ENGINE
         const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
         function getWeeklyPlan() {
@@ -1371,7 +1394,6 @@
             renderDashboardWidgets();
         }
 
-        // PEPTIDE PROTOCOL MANAGER WITH INTAKE CHECKBOXES
         function getPeptides() {
             const saved = localStorage.getItem('tx_peptide_protocols');
             if (saved) return JSON.parse(saved);
@@ -1461,7 +1483,6 @@
             renderDashboardWidgets();
         }
 
-        // WEARABLE BLUETOOTH BLE HEART RATE CONNECTION (GARMIN • WHOOP • APPLE WATCH)
         async function connectBluetoothHeartRate() {
             const statusEl = document.getElementById('bleHrStatus');
             try {
@@ -1538,7 +1559,6 @@
             alert("Apple Shortcut JSON copied to clipboard! Paste into your iPhone Shortcut automation to post directly to Google Sheets.");
         }
 
-        // INSTAGRAM STORY / STAT CARD MODAL & IMAGE GENERATOR
         function openIgStoryModal() {
             const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
             const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
@@ -1631,12 +1651,11 @@
             ctx.fillText('HIGH-PERFORMANCE HYPERTROPHY & BIOHACK OS', 540, 1550);
 
             const link = document.createElement('a');
-            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')}.png`;
+            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')[0]}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
 
-        // REST TIMER WIDGET
         function startRestTimer(seconds) {
             stopRestTimer();
             timerSecondsRemaining = seconds;
@@ -1722,7 +1741,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')}.json`);
+            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
