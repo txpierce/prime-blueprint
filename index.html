@@ -89,7 +89,7 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg text-center">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Target Calories</span>
                     <span id="dashMacroKcal" class="text-base font-black text-slate-100">2,800 kcal</span>
-                    <span id="dashMacroSplit" class="block text-[10px] text-blue-400 font-bold mt-0.5">200P / 315C / 80F</span>
+                    <span id="dashMacroSplit" class="block text-[10px] text-blue-400 font-bold mt-0.5">Training vs Rest Mode</span>
                 </div>
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg text-center">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Active Phase</span>
@@ -99,7 +99,7 @@
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg text-center">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Program Engine</span>
                     <span class="text-xs font-extrabold text-cyan-400">Google Sheets API</span>
-                    <span class="block text-[10px] text-blue-400 font-bold mt-0.5">Dynamic Percentage 1RM</span>
+                    <span class="block text-[10px] text-blue-400 font-bold mt-0.5">Per-Client Overload Sync</span>
                 </div>
             </div>
 
@@ -147,7 +147,7 @@
             <div class="pt-1">
                 <button onclick="saveAllDailyEntries()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs py-3.5 px-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-1.5 electric-glow">
                     <span>💾</span>
-                    <span>Save Daily Entry & Sync to Sheet</span>
+                    <span>Save Daily Entry & Sync to Per-Client Sheet</span>
                 </button>
                 <div id="saveNotification" class="text-center text-[10px] text-blue-400 font-bold mt-1.5 h-4"></div>
             </div>
@@ -189,50 +189,63 @@
         <div id="tab-nutrition" class="tab-content space-y-4">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="font-extrabold text-slate-100 text-sm flex items-center gap-2">
-                        <span class="text-blue-500">🥩</span> Macro Targets & Dynamic Fueling
-                    </h2>
+                    <div>
+                        <span class="text-[9px] font-extrabold uppercase bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">Client Macro Architecture</span>
+                        <h2 class="font-black text-sm text-slate-100 mt-1 flex items-center gap-2">
+                            <span>🥩</span> Dynamic Fueling Strategy
+                        </h2>
+                    </div>
+                    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 gap-1">
+                        <button onclick="setMacroMode('training')" id="btnNutrTraining" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-blue-600 text-white shadow">🏋️ Training Day</button>
+                        <button onclick="setMacroMode('rest')" id="btnNutrRest" class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white">🥩 Rest Day</button>
+                    </div>
                 </div>
-                <p class="text-[11px] text-slate-300">Caloric blueprint dynamically adjusted for training vs recovery days.</p>
+                <p class="text-[11px] text-slate-300">Macros automatically calibrate based on client body weight, goal track, and workout vs recovery days.</p>
+            </div>
+
+            <div id="nutritionCardsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs"></div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-2">
+                <h3 class="font-bold text-slate-100 text-xs tracking-wide flex items-center gap-2">
+                    <span class="text-blue-500">⏰</span> Peri-Workout Meal Fueling Clock
+                </h3>
+                <div class="space-y-2 text-[11px] text-slate-300">
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        <span class="font-bold text-blue-400">Meal 1 (Pre-Lift - 60m prior):</span> Fast-acting carbs + 30g whey/egg protein for intra-workout glycogen loading.
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        <span class="font-bold text-blue-400">Meal 2 (Post-Lift Anabolic Window):</span> 40g lean protein + high-GI carbs to spike insulin & drive nutrients into muscle tissue.
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        <span class="font-bold text-blue-400">Meal 3 (Mid-Day Sustained):</span> Complex carbs (rice/oats) + high-micronutrient greens + healthy omega-3 fats.
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        <span class="font-bold text-blue-400">Meal 4 (Night Time Recovery):</span> Slow-digesting casein/beef protein + magnesium & zinc for nocturnal GH release.
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- BIOHACK & PEPTIDES TAB -->
         <div id="tab-peptides" class="tab-content space-y-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
-                <h2 class="font-extrabold text-slate-100 text-sm flex items-center gap-2"><span class="text-blue-500">🧪</span> Biohack & Peptide Protocol Calculator</h2>
-                <p class="text-[11px] text-slate-400 mt-1">Calculate BAC water dilution ratios, concentrations, and insulin syringe unit draws.</p>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex items-center justify-between">
+                <div>
+                    <h2 class="font-extrabold text-slate-100 text-sm flex items-center gap-2"><span class="text-blue-500">🧪</span> Biohack & Peptide Protocol Manager</h2>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Manage custom compounds, BAC dilution math, dosing, and administration schedules.</p>
+                </div>
+                <button onclick="openPeptideModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-3 py-2 rounded-xl transition shadow electric-glow">+ Add Compound</button>
             </div>
             
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                    <h3 class="font-bold text-xs text-slate-100">1. Retatrutide (10 mg Vial)</h3>
-                    <span class="text-[10px] bg-blue-500/10 text-blue-400 font-bold px-2 py-0.5 rounded border border-blue-500/20">Target: 250 mcg</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs text-center">
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="block text-[10px] text-slate-400 mb-1">BAC (mL)</span>
-                        <input type="number" id="reta_bac" value="2.0" step="0.1" oninput="calcPeptides()" class="w-full bg-slate-900 text-center rounded p-1 font-bold text-blue-400">
-                    </div>
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="block text-[10px] text-slate-400">Conc.</span>
-                        <span id="reta_conc" class="font-bold text-slate-200">5.00 mg/mL</span>
-                    </div>
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        <span class="block text-[10px] text-slate-400">Draw (100u)</span>
-                        <span id="reta_draw" class="font-bold text-blue-400">5.0 units</span>
-                    </div>
-                </div>
-            </div>
+            <div id="peptideListContainer" class="space-y-3"></div>
         </div>
 
     </main>
 
-    <!-- ONBOARDING WIZARD MODAL -->
+    <!-- ONBOARDING / PROFILE MODAL -->
     <div id="onboardingModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-slate-900 border-2 border-blue-500/80 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 text-slate-100 my-auto electric-glow">
             <div class="border-b border-slate-800 pb-2">
-                <span class="text-[9px] font-extrabold uppercase bg-blue-500 text-white px-2 py-0.5 rounded tracking-widest">CLIENT ONBOARDING</span>
+                <span class="text-[9px] font-extrabold uppercase bg-blue-500 text-white px-2 py-0.5 rounded tracking-widest">CLIENT PROFILE</span>
                 <h2 class="font-black text-lg text-slate-100 mt-1">Setup Your Prime Blueprint</h2>
                 <p class="text-[11px] text-blue-400">Enter your stats to auto-calculate your personalized target weights & macros.</p>
             </div>
@@ -275,6 +288,48 @@
         </div>
     </div>
 
+    <!-- ADD PEPTIDE MODAL -->
+    <div id="peptideModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-slate-900 border-2 border-blue-500/80 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 text-slate-100 my-auto electric-glow">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <span class="text-[9px] font-extrabold uppercase bg-blue-500 text-white px-2 py-0.5 rounded tracking-widest">CUSTOM PROTOCOL</span>
+                    <h2 class="font-black text-lg text-slate-100 mt-1">Add Biohack Compound</h2>
+                </div>
+                <button onclick="closePeptideModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Compound Name</label>
+                    <input type="text" id="pep_name" placeholder="e.g. Retatrutide, BPC-157, CJC-1295" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Vial Amount (mg)</label>
+                        <input type="number" id="pep_mg" value="10" step="0.5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">BAC Water (mL)</label>
+                        <input type="number" id="pep_bac" value="2.0" step="0.1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Target Dose (mcg)</label>
+                        <input type="number" id="pep_dose" value="250" step="10" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-cyan-400 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Schedule / Frequency</label>
+                        <input type="text" id="pep_sched" placeholder="e.g. Sun 08:00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="saveCustomPeptide()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-black py-3 rounded-xl shadow-lg transition electric-glow">Save Peptide Protocol</button>
+        </div>
+    </div>
+
     <!-- FLOATING REST TIMER WIDGET -->
     <div id="floatingTimerWidget" class="fixed bottom-0 left-0 right-0 z-50 p-2 bg-slate-950/95 backdrop-blur-md border-t border-blue-900/40 shadow-2xl">
         <div class="max-w-3xl mx-auto flex items-center justify-between px-2 gap-2">
@@ -302,7 +357,7 @@
 
     <!-- SCRIPT LOADER -->
     <script>
-        // LIVE GOOGLE APPS SCRIPT BACKEND URL (UPDATED):
+        // LIVE GOOGLE APPS SCRIPT BACKEND URL:
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4VRz3kf-6L69FZTLN9NFH5uSCNfq5_HQxtjBd14BxK-E8NLr1FwDYJ0YeqYZkpXpAiQ/exec";
 
         let PROGRAM_DATA = {};
@@ -317,7 +372,8 @@
             loadHydration();
             loadCheckinScores();
             updateStreakDisplay();
-            calcPeptides();
+            renderPeptides();
+            renderNutrition();
 
             // PULL WORKOUTS LIVE FROM GOOGLE SHEETS API
             await fetchProgramFromGoogleSheet();
@@ -361,30 +417,52 @@
         }
 
         function openOnboardingModal() {
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            if (p.clientName) document.getElementById('ob_name').value = p.clientName;
+            if (p.email) document.getElementById('ob_email').value = p.email;
+            if (p.weight) document.getElementById('ob_weight').value = p.weight;
+            if (p.goal) document.getElementById('ob_goal').value = p.goal;
+            if (p.benchMax) document.getElementById('ob_bench').value = p.benchMax;
+            if (p.ohpMax) document.getElementById('ob_ohp').value = p.ohpMax;
+            if (p.squatMax) document.getElementById('ob_squat').value = p.squatMax;
+            if (p.rdlMax) document.getElementById('ob_rdl').value = p.rdlMax;
             document.getElementById('onboardingModal').classList.remove('hidden');
         }
 
         function saveOnboardingProfile() {
+            const weight = parseFloat(document.getElementById('ob_weight').value) || 190;
+            const goal = document.getElementById('ob_goal').value || 'hypertrophy';
+            
+            // Dynamic Macro Targets Calculation
+            let tKcal = Math.round(weight * (goal === 'hypertrophy' ? 16 : goal === 'recomp' ? 14 : 12));
+            let rKcal = Math.round(weight * (goal === 'hypertrophy' ? 13.5 : goal === 'recomp' ? 12 : 10));
+
             const profile = {
                 clientName: document.getElementById('ob_name').value || 'Athlete',
                 email: document.getElementById('ob_email').value || '',
-                weight: parseFloat(document.getElementById('ob_weight').value) || 190,
-                goal: document.getElementById('ob_goal').value || 'hypertrophy',
+                weight: weight,
+                goal: goal,
                 benchMax: parseFloat(document.getElementById('ob_bench').value) || 225,
                 ohpMax: parseFloat(document.getElementById('ob_ohp').value) || 135,
                 squatMax: parseFloat(document.getElementById('ob_squat').value) || 315,
-                rdlMax: parseFloat(document.getElementById('ob_rdl').value) || 275
+                rdlMax: parseFloat(document.getElementById('ob_rdl').value) || 275,
+                trainingKcal: tKcal,
+                restKcal: rKcal
             };
 
             localStorage.setItem('prime_client_profile', JSON.stringify(profile));
             document.getElementById('onboardingModal').classList.add('hidden');
             loadProfileHeader();
+            renderNutrition();
+            if (PROGRAM_DATA && Object.keys(PROGRAM_DATA).length > 0) renderWorkout();
 
+            // Sync profile data to Client_Profiles in Google Sheets
+            const peptides = JSON.parse(localStorage.getItem('tx_peptide_protocols')) || [];
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'ONBOARDING', ...profile })
+                body: JSON.stringify({ type: 'ONBOARDING', ...profile, peptideProtocols: peptides })
             }).catch(e => console.log('Profile sync queued...'));
         }
 
@@ -394,20 +472,44 @@
             const nameEl = document.getElementById('clientHeaderName');
             const detEl = document.getElementById('clientHeaderDetails');
             if (nameEl) nameEl.textContent = `Welcome, ${p.clientName}`;
-            if (detEl) detEl.textContent = `${p.weight} lbs • ${p.goal.toUpperCase()} TRACK • Prime Blueprint`;
+            if (detEl) detEl.textContent = `${p.weight} lbs • ${p.goal.toUpperCase()} TRACK • Prime Blueprint Protocol`;
 
-            let kcal = Math.round(p.weight * (p.goal === 'hypertrophy' ? 16 : p.goal === 'recomp' ? 14 : 12));
+            const mode = localStorage.getItem('tx_macro_mode') || 'training';
+            const kcal = mode === 'rest' ? (p.restKcal || Math.round(p.weight * 13.5)) : (p.trainingKcal || Math.round(p.weight * 16));
             const kcalEl = document.getElementById('dashMacroKcal');
-            if (kcalEl) kcalEl.textContent = `${kcal} kcal`;
+            if (kcalEl) kcalEl.textContent = `${kcal} kcal (${mode.toUpperCase()})`;
         }
 
         function saveAllDailyEntries() {
             const todayStr = new Date().toLocaleDateString('en-CA');
             const profile = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
 
+            // Collect set logs from current exercise workout screen
+            const setLogs = [];
+            const exercises = PROGRAM_DATA[currentPhase]?.[currentWeek]?.[currentDay] || [];
+            exercises.forEach((ex, exIdx) => {
+                const sets = parseInt(ex.Sets) || 1;
+                for (let s = 1; s <= sets; s++) {
+                    const checkKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_s${s}`;
+                    const weightKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_wt_s${s}`;
+                    const checked = localStorage.getItem(checkKey) === 'true';
+                    const actualWt = localStorage.getItem(weightKey) || ex.Wt || 'BW';
+
+                    setLogs.push({
+                        exercise: ex.Exercise,
+                        series: ex.Series,
+                        setNum: s,
+                        targetWt: ex.Wt || 'BW',
+                        actualWt: actualWt,
+                        completed: checked
+                    });
+                }
+            });
+
             const dailyEntry = {
                 type: 'DAILY_LOG',
                 date: todayStr,
+                clientName: profile.clientName || 'Client',
                 email: profile.email || 'Client',
                 phase: currentPhase || 'Phase 1',
                 week: currentWeek || 'Week 1',
@@ -419,7 +521,8 @@
                     joints: document.getElementById('scoreJoints')?.value || '-',
                     sleep: document.getElementById('scoreSleep')?.value || '-'
                 },
-                sessionNotes: document.getElementById('sessionNotes')?.value || ''
+                sessionNotes: document.getElementById('sessionNotes')?.value || '',
+                setLogs: setLogs
             };
 
             let historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
@@ -427,6 +530,7 @@
             localStorage.setItem('tx_daily_history_log', JSON.stringify(historyLog));
             updateStreakDisplay();
 
+            // Sync daily entry + per-client set logs to Apps Script
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -436,7 +540,7 @@
 
             const notif = document.getElementById('saveNotification');
             if (notif) {
-                notif.textContent = `Daily Entry Synced to Google Sheet for ${todayStr}!`;
+                notif.textContent = `Daily Entry & Sets Synced to Per-Client Sheet tab!`;
                 setTimeout(() => notif.textContent = '', 3000);
             }
         }
@@ -503,16 +607,22 @@
 
             exercises.forEach((ex, exIdx) => {
                 const sets = parseInt(ex.Sets) || 1;
-                let checksHtml = '<div class="flex flex-wrap gap-2 mt-2.5">';
+                let checksHtml = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">';
 
                 for (let s = 1; s <= sets; s++) {
                     const checkKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_s${s}`;
+                    const weightKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_wt_s${s}`;
+                    
                     const checked = localStorage.getItem(checkKey) === 'true';
+                    // Pre-fill with recommended target weight (ex.Wt) if user hasn't explicitly typed a custom weight yet
+                    const targetWeight = ex.Wt || 'BW';
+                    const savedWeight = localStorage.getItem(weightKey) !== null ? localStorage.getItem(weightKey) : targetWeight;
 
                     checksHtml += `
-                        <div class="flex items-center space-x-1.5 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800 text-[10px]">
-                            <span class="font-bold text-blue-400">S${s}</span>
+                        <div class="flex items-center space-x-1.5 bg-slate-950 px-2 py-1.5 rounded-xl border border-slate-800 text-[10px]">
+                            <span class="font-black text-blue-400">S${s}</span>
                             <input type="checkbox" ${checked ? 'checked' : ''} onchange="localStorage.setItem('${checkKey}', this.checked)">
+                            <input type="text" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded text-center text-blue-300 font-bold focus:outline-none focus:border-blue-500 py-1 text-[10px]">
                         </div>
                     `;
                 }
@@ -522,7 +632,7 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-1 shadow-lg">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-extrabold text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">${ex.Series || 'Ex'}</span>
-                            <span class="text-[11px] text-slate-400 font-semibold">Calculated Weight: <strong class="text-blue-400 font-bold">${ex.Wt || 'BW'}</strong></span>
+                            <span class="text-[11px] text-slate-400 font-semibold">Recommended Target: <strong class="text-cyan-400 font-bold">${ex.Wt || 'BW'}</strong></span>
                         </div>
                         <h4 class="font-bold text-slate-100 text-xs">${ex.Exercise || 'Exercise'}</h4>
                         <div class="flex justify-between text-[11px] text-slate-400">
@@ -535,6 +645,164 @@
             });
         }
 
+        // NUTRITION OS ARCHITECTURE
+        function setMacroMode(mode) {
+            localStorage.setItem('tx_macro_mode', mode);
+            loadProfileHeader();
+            renderNutrition();
+        }
+
+        function renderNutrition() {
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || { weight: 190, goal: 'hypertrophy' };
+            const mode = localStorage.getItem('tx_macro_mode') || 'training';
+
+            const btnT = document.getElementById('btnNutrTraining');
+            const btnR = document.getElementById('btnNutrRest');
+            if (btnT && btnR) {
+                if (mode === 'rest') {
+                    btnR.className = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-blue-600 text-white shadow";
+                    btnT.className = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white";
+                } else {
+                    btnT.className = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-blue-600 text-white shadow";
+                    btnR.className = "px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition bg-slate-900 text-slate-400 hover:text-white";
+                }
+            }
+
+            const mult = mode === 'rest' 
+                ? (p.goal === 'hypertrophy' ? 13.5 : p.goal === 'recomp' ? 12 : 10)
+                : (p.goal === 'hypertrophy' ? 16 : p.goal === 'recomp' ? 14 : 12);
+
+            const kcal = Math.round(p.weight * mult);
+            const protein = Math.round(p.weight * (mode === 'rest' ? 1.15 : 1.1));
+            const fat = Math.round((kcal * (mode === 'rest' ? 0.35 : 0.25)) / 9);
+            const carbs = Math.round((kcal - (protein * 4 + fat * 9)) / 4);
+
+            const container = document.getElementById('nutritionCardsContainer');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Calories</span>
+                    <span class="text-base font-black text-blue-400">${kcal}</span>
+                    <span class="block text-[9px] text-slate-400 mt-0.5">kcal / day</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Protein</span>
+                    <span class="text-base font-black text-cyan-400">${protein}g</span>
+                    <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(protein*4)} kcal (${Math.round((protein*4/kcal)*100)}%)</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Carbohydrates</span>
+                    <span class="text-base font-black text-slate-100">${carbs}g</span>
+                    <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(carbs*4)} kcal (${Math.round((carbs*4/kcal)*100)}%)</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg text-center">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Healthy Fats</span>
+                    <span class="text-base font-black text-blue-300">${fat}g</span>
+                    <span class="block text-[9px] text-slate-400 mt-0.5">${Math.round(fat*9)} kcal (${Math.round((fat*9/kcal)*100)}%)</span>
+                </div>
+            `;
+        }
+
+        // PEPTIDE & BIOHACK PROTOCOL MANAGER
+        function getPeptides() {
+            const saved = localStorage.getItem('tx_peptide_protocols');
+            if (saved) return JSON.parse(saved);
+            
+            // Default protocols
+            const defaults = [
+                { id: '1', name: 'Retatrutide (GLP-1/GIP/GCG)', mg: 10, bac: 2.0, dose: 250, sched: 'Sun 08:00 (Weekly)' },
+                { id: '2', name: 'BPC-157 / TB-500 Healing Blend', mg: 10, bac: 2.0, dose: 500, sched: 'Daily 08:00 (Morning)' }
+            ];
+            localStorage.setItem('tx_peptide_protocols', JSON.stringify(defaults));
+            return defaults;
+        }
+
+        function renderPeptides() {
+            const peptides = getPeptides();
+            const container = document.getElementById('peptideListContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            peptides.forEach((item, idx) => {
+                const conc = (item.mg / item.bac).toFixed(2); // mg/mL
+                const drawUnits = ((item.dose / 1000) / (item.mg / item.bac) * 100).toFixed(1); // 100u insulin syringe units
+
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <div>
+                                <span class="text-[9px] font-extrabold uppercase bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">${item.sched || 'Active Protocol'}</span>
+                                <h3 class="font-bold text-xs text-slate-100 mt-1">${item.name} (${item.mg} mg Vial)</h3>
+                            </div>
+                            <button onclick="deletePeptide('${item.id}')" class="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1">Delete</button>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-xs text-center">
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <span class="block text-[10px] text-slate-400 mb-0.5">BAC Water</span>
+                                <span class="font-bold text-slate-200">${item.bac} mL</span>
+                            </div>
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <span class="block text-[10px] text-slate-400 mb-0.5">Concentration</span>
+                                <span class="font-bold text-blue-400">${conc} mg/mL</span>
+                            </div>
+                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <span class="block text-[10px] text-slate-400 mb-0.5">Syringe Draw</span>
+                                <span class="font-black text-cyan-400">${drawUnits} units (${item.dose} mcg)</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openPeptideModal() {
+            document.getElementById('peptideModal').classList.remove('hidden');
+        }
+
+        function closePeptideModal() {
+            document.getElementById('peptideModal').classList.add('hidden');
+        }
+
+        function saveCustomPeptide() {
+            const name = document.getElementById('pep_name').value || 'Custom Peptide';
+            const mg = parseFloat(document.getElementById('pep_mg').value) || 10;
+            const bac = parseFloat(document.getElementById('pep_bac').value) || 2.0;
+            const dose = parseFloat(document.getElementById('pep_dose').value) || 250;
+            const sched = document.getElementById('pep_sched').value || 'Daily';
+
+            const peptides = getPeptides();
+            peptides.push({
+                id: Date.now().toString(),
+                name: name,
+                mg: mg,
+                bac: bac,
+                dose: dose,
+                sched: sched
+            });
+
+            localStorage.setItem('tx_peptide_protocols', JSON.stringify(peptides));
+            closePeptideModal();
+            renderPeptides();
+
+            // Sync to Google Sheet
+            const profile = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'ONBOARDING', ...profile, peptideProtocols: peptides })
+            }).catch(e => console.log('Peptide protocol synced...'));
+        }
+
+        function deletePeptide(id) {
+            let peptides = getPeptides();
+            peptides = peptides.filter(p => p.id !== id);
+            localStorage.setItem('tx_peptide_protocols', JSON.stringify(peptides));
+            renderPeptides();
+        }
+
+        // REST TIMER WIDGET
         function startRestTimer(seconds) {
             stopRestTimer();
             timerSecondsRemaining = seconds;
@@ -609,12 +877,6 @@
 
         function saveNotes() {
             localStorage.setItem('tx_notes', document.getElementById('sessionNotes').value);
-        }
-
-        function calcPeptides() {
-            const rBac = parseFloat(document.getElementById('reta_bac')?.value) || 2.0;
-            if (document.getElementById('reta_conc')) document.getElementById('reta_conc').textContent = (10 / rBac).toFixed(2) + ' mg/mL';
-            if (document.getElementById('reta_draw')) document.getElementById('reta_draw').textContent = (250 / ((10 / rBac) * 10)).toFixed(1) + ' u';
         }
 
         function exportBackupJSON() {
