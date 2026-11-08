@@ -736,15 +736,14 @@
             renderDashboardWidgets();
         }
 
-        // TIME MATH HELPERS FOR DYNAMIC FUELING TIMINGS (READS LIVE USER INPUTS)
         function addMinutesToTime(timeStr, minsToAdd) {
             if (!timeStr) timeStr = '07:30';
             let parts = timeStr.split(':').map(Number);
-            let h = isNaN(parts[0]) ? 7 : parts[0];
-            let m = isNaN(parts[1]) ? 0 : parts[1];
+            let h = isNaN(parts) ? 7 : parts;
+            let m = isNaN(parts) ? 0 : parts;
             
             let totalMins = h * 60 + m + minsToAdd;
-            totalMins = (totalMins + 14400) % 1440; // Safely handle negative offsets past midnight
+            totalMins = (totalMins + 14400) % 1440;
             
             let newH = Math.floor(totalMins / 60);
             let newM = totalMins % 60;
@@ -1032,7 +1031,7 @@
             return str;
         }
 
-        // DYNAMIC 1RM PERCENTAGE-TO-POUNDS ENGINE
+        // DYNAMIC 1RM PERCENTAGE-TO-POUNDS ENGINE WITH DUMBBELL / UNILATERAL SPLIT
         function calculateWeightFromPct(ex) {
             if (!ex || !ex.Wt) return 'BW';
             const wtStr = String(ex.Wt).trim();
@@ -1042,7 +1041,7 @@
 
             const pctMatch = wtStr.match(/(\d+(?:\.\d+)?)%/);
             if (pctMatch) {
-                const pct = parseFloat(pctMatch[1]) / 100.0;
+                const pct = parseFloat(pctMatch) / 100.0;
                 const exNameLower = (ex.Exercise || '').toLowerCase();
                 const wtLower = wtStr.toLowerCase();
 
@@ -1058,12 +1057,30 @@
                     baseMax = p.benchMax || 225;
                 }
 
-                const calc = Math.round((baseMax * pct) / 5) * 5;
+                let calc = Math.round((baseMax * pct) / 5) * 5;
+
+                // Check if Dumbbell (DB), Single-Arm / Single-Leg, or Unilateral movement
+                const isDumbbellOrUnilateral = exNameLower.includes('db') || 
+                                               exNameLower.includes('dumbbell') || 
+                                               exNameLower.includes('single-arm') || 
+                                               exNameLower.includes('single arm') || 
+                                               exNameLower.includes('single-leg') || 
+                                               exNameLower.includes('single leg') || 
+                                               exNameLower.includes('unilateral') || 
+                                               exNameLower.includes('1-arm') || 
+                                               exNameLower.includes('1 arm') || 
+                                               wtLower.includes('db') || 
+                                               wtLower.includes('dumbbell');
+
+                if (isDumbbellOrUnilateral) {
+                    calc = Math.round((calc / 2.0) / 5) * 5;
+                }
+
                 return calc > 0 ? calc : 'BW';
             }
 
             const numMatch = wtStr.match(/\d+/);
-            if (numMatch) return parseInt(numMatch[0]);
+            if (numMatch) return parseInt(numMatch);
 
             return wtStr || 'BW';
         }
@@ -1102,8 +1119,12 @@
                 const cleanTempo = ex.Tempo || '-';
 
                 const calculatedTarget = calculateWeightFromPct(ex);
+                const exNameLower = (ex.Exercise || '').toLowerCase();
+                const wtLower = String(ex.Wt || '').toLowerCase();
+                const isDb = exNameLower.includes('db') || exNameLower.includes('dumbbell') || exNameLower.includes('single-arm') || exNameLower.includes('single arm') || exNameLower.includes('single-leg') || exNameLower.includes('single leg') || exNameLower.includes('unilateral') || exNameLower.includes('1-arm') || exNameLower.includes('1 arm') || wtLower.includes('db') || wtLower.includes('dumbbell');
+
                 const displayTargetLabel = typeof calculatedTarget === 'number' 
-                    ? `${calculatedTarget} lbs ${ex.Wt && ex.Wt.includes('%') ? '(' + ex.Wt + ')' : ''}`
+                    ? `${calculatedTarget} lbs${isDb ? ' / hand' : ''} ${ex.Wt && ex.Wt.includes('%') ? '(' + ex.Wt + ')' : ''}`
                     : (ex.Wt || 'BW');
 
                 let checksHtml = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">';
@@ -1114,7 +1135,7 @@
                     
                     const checked = localStorage.getItem(checkKey) === 'true';
                     
-                    // Dynamic Phase-Scoped Target Weight Lookup (Calculates Math in Lbs!)
+                    // Dynamic Phase-Scoped Target Weight Lookup (Calculates Math in Lbs with DB split!)
                     const dynamicTarget = getPhaseMaxWeight(currentPhase, exIdx, s, ex);
                     const savedWeight = localStorage.getItem(weightKey) !== null ? localStorage.getItem(weightKey) : dynamicTarget;
 
@@ -1610,7 +1631,7 @@
             ctx.fillText('HIGH-PERFORMANCE HYPERTROPHY & BIOHACK OS', 540, 1550);
 
             const link = document.createElement('a');
-            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')[0]}.png`;
+            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
@@ -1701,7 +1722,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
