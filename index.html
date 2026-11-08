@@ -353,11 +353,11 @@
                 <div class="grid grid-cols-2 gap-3 text-xs">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Wake-Up Time</label>
-                        <input type="time" id="nutr_wakeTime" value="06:00" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
+                        <input type="time" id="nutr_wakeTime" value="06:00" oninput="saveScheduleTimings()" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Workout / Lift Time</label>
-                        <input type="time" id="nutr_liftTime" value="07:30" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+                        <input type="time" id="nutr_liftTime" value="07:30" oninput="saveScheduleTimings()" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
                     </div>
                 </div>
             </div>
@@ -735,15 +735,15 @@
             renderDashboardWidgets();
         }
 
-        // TIME MATH HELPERS FOR DYNAMIC FUELING TIMINGS
+        // TIME MATH HELPERS FOR DYNAMIC FUELING TIMINGS (READS LIVE USER INPUTS)
         function addMinutesToTime(timeStr, minsToAdd) {
             if (!timeStr) timeStr = '07:30';
             let parts = timeStr.split(':').map(Number);
-            let h = parts[0] || 7;
-            let m = parts[1] || 0;
+            let h = isNaN(parts[0]) ? 7 : parts[0];
+            let m = isNaN(parts[1]) ? 0 : parts[1];
             
             let totalMins = h * 60 + m + minsToAdd;
-            totalMins = (totalMins + 1440) % 1440;
+            totalMins = (totalMins + 14400) % 1440; // Safely handle negative offsets past midnight
             
             let newH = Math.floor(totalMins / 60);
             let newM = totalMins % 60;
@@ -754,9 +754,13 @@
         }
 
         function getMealSchedule() {
+            // Live User Inputs from DOM first, then localStorage profile fallback
+            const wakeInput = document.getElementById('nutr_wakeTime')?.value;
+            const liftInput = document.getElementById('nutr_liftTime')?.value;
+
             const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
-            const wakeTime = p.wakeTime || '06:00';
-            const liftTime = p.liftTime || '07:30';
+            const wakeTime = wakeInput || p.wakeTime || '06:00';
+            const liftTime = liftInput || p.liftTime || '07:30';
 
             return [
                 { id: 1, title: 'Meal 1 (Pre-Workout Intra Glycogen)', time: addMinutesToTime(liftTime, -60), desc: 'Fast-acting carbs + 30g whey/egg protein for workout glycogen loading.' },
@@ -832,8 +836,8 @@
                 wearableSleep: document.getElementById('wear_sleep')?.value || '-',
                 restingHr: document.getElementById('wear_restingHr')?.value || '-',
                 sessionNotes: document.getElementById('sessionNotes')?.value || '',
-                wakeTime: profile.wakeTime || '06:00',
-                liftTime: profile.liftTime || '07:30',
+                wakeTime: document.getElementById('nutr_wakeTime')?.value || profile.wakeTime || '06:00',
+                liftTime: document.getElementById('nutr_liftTime')?.value || profile.liftTime || '07:30',
                 peptidesDone: peptidesDone,
                 streak: Object.keys(historyLog).length,
                 setLogs: setLogs
@@ -1676,7 +1680,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files[0];
+            const file = event.target.files;
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
