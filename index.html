@@ -1162,17 +1162,15 @@
             if (!restStr || restStr === 'undefined' || restStr === 'null') return defaultSeriesRest(seriesStr);
             let s = String(restStr).toLowerCase().trim();
             
-            // Check for explicit minute notation (e.g. "2 min", "2.5m", "3min")
             let minMatch = s.match(/(\d+(?:\.\d+)?)\s*(?:min|m\b)/);
             if (minMatch) {
                 return Math.round(parseFloat(minMatch[1]) * 60);
             }
             
-            // Check for explicit second notation or plain integer (e.g. "120s", "90", "60")
             let secMatch = s.match(/(\d+)/);
             if (secMatch) {
                 let val = parseInt(secMatch[1]);
-                if (val <= 10 && !s.includes('s')) { // e.g. "2" meaning 2 minutes
+                if (val <= 10 && !s.includes('s')) {
                     return val * 60;
                 }
                 return val;
@@ -1189,7 +1187,6 @@
             return 90;
         }
 
-        // DYNAMIC 1RM PERCENTAGE-TO-POUNDS ENGINE WITH EQUIPMENT CONTEXT TAGGING & UNILATERAL SPLIT
         function calculateWeightFromPct(ex) {
             if (!ex || !ex.Wt) return { val: 'BW', tag: '' };
             const wtStr = String(ex.Wt).trim();
@@ -1273,7 +1270,6 @@
             return { val: wtStr || 'BW', tag: loadTag };
         }
 
-        // DYNAMIC PHASE-SCOPED WEIGHT ENGINE
         function getPhaseMaxWeight(phase, exIdx, setNum, ex) {
             let maxLogged = 0;
             for (let i = 0; i < localStorage.length; i++) {
@@ -1316,7 +1312,6 @@
                     ? `${calculatedTarget} lbs${loadTag} ${ex.Wt && ex.Wt.includes('%') ? '(' + ex.Wt + ')' : ''}`
                     : (ex.Wt || 'BW');
 
-                // ONLY SHOW WARM-UP SETS BUTTON FOR A-SERIES LIFTS
                 const isASeries = ex.Series && String(ex.Series).toUpperCase().trim().startsWith('A');
                 const wuButtonHtml = isASeries 
                     ? `<button onclick="openWarmupModal('${ex.Exercise ? ex.Exercise.replace(/'/g, "\\'") : 'Exercise'}', '${calculatedTarget}')" class="text-[9px] bg-slate-950 hover:bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/40 font-bold ml-1.5 transition">🔥 WUSets</button>`
@@ -1342,7 +1337,7 @@
                         <div class="flex items-center space-x-1 bg-slate-950 px-2 py-1.5 rounded-xl border ${isPR ? 'border-amber-500/60 ring-1 ring-amber-500/30' : 'border-slate-800'} text-[10px]">
                             <span class="font-black ${isPR ? 'text-amber-400' : 'text-blue-400'}">S${s}</span>
                             <input type="checkbox" ${checked ? 'checked' : ''} onchange="onSetCheckChange('${checkKey}', this.checked, ${exIdx}, ${s}, '${ex.Series || ''}', '${ex.Exercise ? ex.Exercise.replace(/'/g, "\\'") : ''}', '${exRestStr}')">
-                            <input type="text" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value); renderWorkout();" class="w-full bg-slate-900 border ${isPR ? 'border-amber-500/80 text-amber-300' : 'border-slate-700 text-blue-300'} rounded text-center font-bold focus:outline-none focus:border-blue-500 py-1 text-[10px]">
+                            <input type="text" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value);" onchange="renderWorkout();" class="w-full bg-slate-900 border ${isPR ? 'border-amber-500/80 text-amber-300' : 'border-slate-700 text-blue-300'} rounded text-center font-bold focus:outline-none focus:border-blue-500 py-1 text-[10px]">
                             ${prBadge}
                         </div>
                     `;
@@ -1883,27 +1878,25 @@
                 
                 const now = ctx.currentTime;
                 
-                // Create Master Volume Node capped at max full dynamic range
                 const masterGain = ctx.createGain();
                 masterGain.gain.setValueAtTime(1.0, now);
                 masterGain.connect(ctx.destination);
 
-                // High-frequency dual-oscillator bursts tailored for headphone audibility over music bass
                 const bursts = [
-                    { time: now, freqs: [1760, 2793.83] },       // A6 + F7 (High Chime Burst 1)
-                    { time: now + 0.18, freqs: [2093, 3135.96] },  // C7 + G7
-                    { time: now + 0.36, freqs: [2637.02, 3520] }, // E7 + A7
-                    { time: now + 0.65, freqs: [1760, 2793.83] }, // Burst 2 Repeat
+                    { time: now, freqs: [1760, 2793.83] },
+                    { time: now + 0.18, freqs: [2093, 3135.96] },
+                    { time: now + 0.36, freqs: [2637.02, 3520] },
+                    { time: now + 0.65, freqs: [1760, 2793.83] },
                     { time: now + 0.83, freqs: [2093, 3135.96] },
                     { time: now + 1.01, freqs: [2637.02, 3520] },
-                    { time: now + 1.35, freqs: [3520, 4186.01] }  // A7 + C8 Peak High Frequency Cut-Through
+                    { time: now + 1.35, freqs: [3520, 4186.01] }
                 ];
 
                 bursts.forEach(b => {
                     b.freqs.forEach(freq => {
                         const osc = ctx.createOscillator();
                         const gain = ctx.createGain();
-                        osc.type = 'sawtooth'; // Sawtooth produces rich harmonic overtones that cut through background music
+                        osc.type = 'sawtooth';
                         osc.frequency.setValueAtTime(freq, b.time);
                         gain.gain.setValueAtTime(0.85, b.time);
                         gain.gain.exponentialRampToValueAtTime(0.001, b.time + 0.15);
@@ -1914,9 +1907,8 @@
                     });
                 });
 
-                // Device Haptic Vibration Pulse Pattern
                 if (navigator.vibrate) {
-                    navigator.vibrate([400, 150, 400, 150, 600]);
+                    navigator.vibrate([200, 100, 200, 100, 300]);
                 }
             } catch (e) {
                 console.log('Loud audio playback error:', e);
@@ -1931,7 +1923,6 @@
             const activeView = document.getElementById('timerActiveView');
             if (activeView) activeView.classList.remove('hidden');
 
-            // ADD NEON CYAN TIMER GLOW TO FLOATING BOTTOM WIDGET
             const widget = document.getElementById('floatingTimerWidget');
             if (widget) {
                 widget.classList.add('border-cyan-400', 'shadow-[0_-5px_30px_rgba(6,182,212,0.6)]', 'electric-glow');
@@ -1966,7 +1957,6 @@
             const activeView = document.getElementById('timerActiveView');
             if (activeView) activeView.classList.add('hidden');
 
-            // REMOVE NEON CYAN TIMER GLOW FROM FLOATING WIDGET
             const widget = document.getElementById('floatingTimerWidget');
             if (widget) {
                 widget.classList.remove('border-cyan-400', 'shadow-[0_-5px_30px_rgba(6,182,212,0.6)]', 'electric-glow');
@@ -2055,7 +2045,6 @@
             reader.readAsText(file);
         }
 
-        // PWA HOME SCREEN INSTALLER ENGINE
         let deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -2096,7 +2085,6 @@
             } catch (e) { console.log('PWA manifest initialized'); }
         }
 
-        // WARM-UP SET & PLATE CALCULATOR
         function calcPlatesPerSide(totalWt) {
             const bar = 45;
             if (totalWt <= bar) return "Bar Only (45 lbs)";
@@ -2155,14 +2143,11 @@
             document.getElementById('warmupModal').classList.add('hidden');
         }
 
-        // AUTO-START REST TIMER WITH DYNAMIC EXERCISE REST PARSING & FATIGUE AUTO-ADJUST
         function onSetCheckChange(checkKey, isChecked, exIdx, setNum, seriesStr, exNameStr, exRestStr) {
             localStorage.setItem(checkKey, isChecked);
 
             if (isChecked) {
-                // PARSE EXACT EXERCISE REST REQUIREMENT
                 let restSecs = parseRestSeconds(exRestStr, seriesStr);
-
                 startRestTimer(restSecs);
                 checkFatigueAutoAdjust(exIdx, setNum);
             }
@@ -2197,7 +2182,6 @@
             if (banner) banner.classList.add('hidden');
         }
 
-        // PR HISTORY & VOLUME LOG ENGINE
         function openPrHistoryModal() {
             renderPrHistoryList();
             document.getElementById('prHistoryModal').classList.remove('hidden');
