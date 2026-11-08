@@ -1052,20 +1052,59 @@
             return str;
         }
 
-        // DYNAMIC 1RM PERCENTAGE-TO-POUNDS ENGINE WITH DUMBBELL / UNILATERAL SPLIT
+        // DYNAMIC 1RM PERCENTAGE-TO-POUNDS ENGINE WITH EQUIPMENT CONTEXT TAGGING & UNILATERAL SPLIT
         function calculateWeightFromPct(ex) {
-            if (!ex || !ex.Wt) return 'BW';
+            if (!ex || !ex.Wt) return { val: 'BW', tag: '' };
             const wtStr = String(ex.Wt).trim();
             const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {
                 benchMax: 225, squatMax: 315, ohpMax: 135, rdlMax: 275
             };
 
+            const exNameLower = (ex.Exercise || '').toLowerCase();
+            const wtLower = wtStr.toLowerCase();
+
+            const isDbOrUnilateral = exNameLower.includes('db') || 
+                                     exNameLower.includes('dumbbell') || 
+                                     exNameLower.includes('single-arm') || 
+                                     exNameLower.includes('single arm') || 
+                                     exNameLower.includes('single-leg') || 
+                                     exNameLower.includes('single leg') || 
+                                     exNameLower.includes('unilateral') || 
+                                     exNameLower.includes('1-arm') || 
+                                     exNameLower.includes('1 arm') || 
+                                     exNameLower.includes('1-leg') || 
+                                     exNameLower.includes('1 leg') || 
+                                     wtLower.includes('db') || 
+                                     wtLower.includes('dumbbell');
+
+            const isIsoLateral = exNameLower.includes('iso-lateral') || 
+                                 exNameLower.includes('iso lateral') || 
+                                 exNameLower.includes('plate loaded') || 
+                                 exNameLower.includes('plate-loaded');
+
+            const isCableOrMachine = exNameLower.includes('cable') || 
+                                     exNameLower.includes('rope') || 
+                                     exNameLower.includes('pulldown') || 
+                                     exNameLower.includes('pushdown') || 
+                                     exNameLower.includes('machine') || 
+                                     exNameLower.includes('stack') || 
+                                     exNameLower.includes('extension') || 
+                                     exNameLower.includes('press machine');
+
+            let loadTag = '';
+            if (isDbOrUnilateral) {
+                loadTag = ' / hand';
+            } else if (isIsoLateral) {
+                loadTag = ' / side';
+            } else if (isCableOrMachine) {
+                loadTag = ' (Total Stack)';
+            } else if (exNameLower.includes('barbell') || exNameLower.includes('bench') || exNameLower.includes('squat') || exNameLower.includes('rdl') || exNameLower.includes('ohp') || exNameLower.includes('press') || exNameLower.includes('row')) {
+                loadTag = ' (Total Bar)';
+            }
+
             const pctMatch = wtStr.match(/(\d+(?:\.\d+)?)%/);
             if (pctMatch) {
-                const pct = parseFloat(pctMatch) / 100.0;
-                const exNameLower = (ex.Exercise || '').toLowerCase();
-                const wtLower = wtStr.toLowerCase();
-
+                const pct = parseFloat(pctMatch[1]) / 100.0;
                 let baseMax = p.benchMax || 225;
 
                 if (wtLower.includes('ohp') || exNameLower.includes('ohp') || exNameLower.includes('shoulder') || exNameLower.includes('arnold') || exNameLower.includes('overhead')) {
@@ -1080,29 +1119,17 @@
 
                 let calc = Math.round((baseMax * pct) / 5) * 5;
 
-                const isDumbbellOrUnilateral = exNameLower.includes('db') || 
-                                               exNameLower.includes('dumbbell') || 
-                                               exNameLower.includes('single-arm') || 
-                                               exNameLower.includes('single arm') || 
-                                               exNameLower.includes('single-leg') || 
-                                               exNameLower.includes('single leg') || 
-                                               exNameLower.includes('unilateral') || 
-                                               exNameLower.includes('1-arm') || 
-                                               exNameLower.includes('1 arm') || 
-                                               wtLower.includes('db') || 
-                                               wtLower.includes('dumbbell');
-
-                if (isDumbbellOrUnilateral) {
+                if (isDbOrUnilateral || isIsoLateral) {
                     calc = Math.round((calc / 2.0) / 5) * 5;
                 }
 
-                return calc > 0 ? calc : 'BW';
+                return { val: calc > 0 ? calc : 'BW', tag: loadTag };
             }
 
             const numMatch = wtStr.match(/\d+/);
-            if (numMatch) return parseInt(numMatch);
+            if (numMatch) return { val: parseInt(numMatch[0]), tag: loadTag };
 
-            return wtStr || 'BW';
+            return { val: wtStr || 'BW', tag: loadTag };
         }
 
         // DYNAMIC PHASE-SCOPED WEIGHT ENGINE
@@ -1119,7 +1146,8 @@
             }
             if (maxLogged > 0) return maxLogged;
 
-            return calculateWeightFromPct(ex);
+            const res = calculateWeightFromPct(ex);
+            return res.val;
         }
 
         function renderWorkout() {
@@ -1138,13 +1166,12 @@
                 const cleanRpe = cleanRpeString(ex.RPE);
                 const cleanTempo = ex.Tempo || '-';
 
-                const calculatedTarget = calculateWeightFromPct(ex);
-                const exNameLower = (ex.Exercise || '').toLowerCase();
-                const wtLower = String(ex.Wt || '').toLowerCase();
-                const isDb = exNameLower.includes('db') || exNameLower.includes('dumbbell') || exNameLower.includes('single-arm') || exNameLower.includes('single arm') || exNameLower.includes('single-leg') || exNameLower.includes('single leg') || exNameLower.includes('unilateral') || exNameLower.includes('1-arm') || exNameLower.includes('1 arm') || wtLower.includes('db') || wtLower.includes('dumbbell');
+                const targetObj = calculateWeightFromPct(ex);
+                const calculatedTarget = targetObj.val;
+                const loadTag = targetObj.tag;
 
                 const displayTargetLabel = typeof calculatedTarget === 'number' 
-                    ? `${calculatedTarget} lbs${isDb ? ' / hand' : ''} ${ex.Wt && ex.Wt.includes('%') ? '(' + ex.Wt + ')' : ''}`
+                    ? `${calculatedTarget} lbs${loadTag} ${ex.Wt && ex.Wt.includes('%') ? '(' + ex.Wt + ')' : ''}`
                     : (ex.Wt || 'BW');
 
                 let checksHtml = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">';
@@ -1750,7 +1777,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files;
+            const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
