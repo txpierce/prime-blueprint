@@ -454,7 +454,7 @@
             <div id="igPreviewCard" class="bg-gradient-to-b from-slate-950 via-blue-950 to-slate-950 border-2 border-blue-500/40 rounded-2xl p-4 space-y-3 text-center shadow-2xl relative overflow-hidden">
                 <div class="flex items-center justify-between text-[10px] text-blue-400 font-black tracking-wider uppercase border-b border-blue-900/50 pb-2">
                     <span>⚡ PRIME BLUEPRINT OS</span>
-                    <span id="igDateText">NOV 07, 2026</span>
+                    <span id="igDateText">NOV 08, 2026</span>
                 </div>
                 <div class="py-1">
                     <span id="igClientName" class="text-lg font-black text-white tracking-wide block">ATHLETE</span>
@@ -952,8 +952,7 @@
             let str = String(val).trim();
             if (!str) return '-';
 
-            // Convert Date strings like "Sun Aug 10 2026 00:00:00" back to clean "8-10"
-            if (str.includes('GMT') || str.includes('T00:') || /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(str)) {
+            if (str.includes('GMT') || str.includes('T00:') || /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(str) || /^\d{4}-\d{2}-\d{2}/.test(str)) {
                 let d = new Date(str);
                 if (!isNaN(d.getTime())) {
                     let m = d.getMonth() + 1;
@@ -961,11 +960,29 @@
                     return `${m}-${day}`;
                 }
             }
-            let isoMatch = str.match(/^\d{4}-(\d{2})-(\d{2})/);
-            if (isoMatch) {
-                let m = parseInt(isoMatch[1], 10);
-                let day = parseInt(isoMatch[2], 10);
-                return `${m}-${day}`;
+            return str;
+        }
+
+        // CLEAN RPE STRING SANITIZER TO PREVENT DATE PARSING BUGS
+        function cleanRpeString(val) {
+            if (val === null || val === undefined) return '-';
+            let str = String(val).trim();
+            if (!str) return '-';
+
+            if (str.includes('GMT') || str.includes('T00:') || /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(str) || /^\d{4}-\d{2}-\d{2}/.test(str)) {
+                let d = new Date(str);
+                if (!isNaN(d.getTime())) {
+                    let m = d.getMonth() + 1;
+                    let day = d.getDate();
+                    if (m === 3 && day === 4) return '3-4';
+                    if (m === 4 && day === 5) return '4-5';
+                    if (m === 6 && day === 7) return '6-7';
+                    if (m === 8 && day === 5) return '8.5';
+                    if (m === 8 && day === 9) return '8.5-9';
+                    if (m === 9 && day === 5) return '9.5-10';
+                    if (m === 9 && day === 10) return '9.5-10';
+                    return `${m}-${day}`;
+                }
             }
             return str;
         }
@@ -983,6 +1000,9 @@
             exercises.forEach((ex, exIdx) => {
                 const sets = parseInt(ex.Sets) || 1;
                 const cleanReps = cleanRepString(ex.Reps);
+                const cleanRpe = cleanRpeString(ex.RPE);
+                const cleanTempo = ex.Tempo || '-';
+
                 let checksHtml = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">';
 
                 for (let s = 1; s <= sets; s++) {
@@ -1010,9 +1030,9 @@
                             <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${ex.Wt || 'BW'}</strong></span>
                         </div>
                         <h4 class="font-bold text-slate-100 text-xs">${ex.Exercise || 'Exercise'}</h4>
-                        <div class="flex justify-between text-[11px] text-slate-400">
-                            <span>Sets: <strong class="text-slate-200">${ex.Sets || '-'}</strong> | Reps: <strong class="text-cyan-400 font-bold">${cleanReps}</strong></span>
-                            <span>Rest: <strong>${ex.Rest || '-'}</strong> | RPE: <strong>${ex.RPE || '-'}</strong></span>
+                        <div class="flex flex-wrap justify-between items-center text-[11px] text-slate-400 gap-y-1">
+                            <span>Sets: <strong class="text-slate-200">${ex.Sets || '-'}</strong> | Reps: <strong class="text-cyan-400 font-bold">${cleanReps}</strong> | Tempo: <strong class="text-amber-400 font-bold">${cleanTempo}</strong></span>
+                            <span>Rest: <strong class="text-slate-200">${ex.Rest || '-'}</strong> | RPE: <strong class="text-cyan-400 font-bold">${cleanRpe}</strong></span>
                         </div>
                         ${checksHtml}
                     </div>
@@ -1386,7 +1406,7 @@
 
             // Trigger Image Download
             const link = document.createElement('a');
-            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')}.png`;
+            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')[0]}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
@@ -1477,7 +1497,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')}.json`);
+            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
@@ -1486,7 +1506,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files;
+            const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
