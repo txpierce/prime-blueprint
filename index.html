@@ -114,7 +114,7 @@
                 </div>
             </div>
 
-            <!-- WEARABLES & RECOVERY OS WIDGET (GARMIN • WHOOP • APPLE WATCH) -->
+            <!-- WEARABLES & RECOVERY OS WIDGET -->
             <div class="bg-slate-900 border border-blue-900/40 rounded-2xl p-4 shadow-xl space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                     <div>
@@ -369,19 +369,23 @@
                 <div id="macroCalendarGrid" class="grid grid-cols-1 sm:grid-cols-7 gap-2 text-xs"></div>
             </div>
 
-            <!-- WAKE UP & WORKOUT TIMING INPUTS -->
+            <!-- WAKE UP, LIFT & BED TIME TIMING INPUTS -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
                 <h3 class="font-bold text-xs text-slate-100 flex items-center gap-1.5">
                     <span class="text-blue-500">⏱️</span> Daily Schedule Timings
                 </h3>
-                <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="grid grid-cols-3 gap-2 text-xs">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Wake-Up Time</label>
-                        <input type="time" id="nutr_wakeTime" value="06:00" oninput="saveScheduleTimings()" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
+                        <input type="time" id="nutr_wakeTime" value="06:00" oninput="saveScheduleTimings()" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Workout / Lift Time</label>
-                        <input type="time" id="nutr_liftTime" value="07:30" oninput="saveScheduleTimings()" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Workout Time</label>
+                        <input type="time" id="nutr_liftTime" value="07:30" oninput="saveScheduleTimings()" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bed Time</label>
+                        <input type="time" id="nutr_bedTime" value="22:00" oninput="saveScheduleTimings()" onchange="saveScheduleTimings()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-cyan-400 font-bold focus:border-blue-500 focus:outline-none">
                     </div>
                 </div>
             </div>
@@ -392,7 +396,7 @@
                     <h3 class="font-bold text-slate-100 text-xs tracking-wide flex items-center gap-2">
                         <span class="text-blue-500">⏰</span> Meal Timing & Completion Tracker
                     </h3>
-                    <span id="mealCompletionCount" class="text-[10px] font-extrabold text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">0 / 4 Completed</span>
+                    <span id="mealCompletionCount" class="text-[10px] font-extrabold text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">0 / 6 Completed</span>
                 </div>
                 <div id="mealScheduleList" class="space-y-2.5 text-[11px] text-slate-300"></div>
             </div>
@@ -445,14 +449,18 @@
                         </select>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-3 gap-2">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Wake Time</label>
-                        <input type="time" id="ob_wakeTime" value="06:00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
+                        <input type="time" id="ob_wakeTime" value="06:00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-slate-100 font-bold focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Workout / Lift Time</label>
-                        <input type="time" id="ob_liftTime" value="07:30" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Workout Time</label>
+                        <input type="time" id="ob_liftTime" value="07:30" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-blue-400 font-bold focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bed Time</label>
+                        <input type="time" id="ob_bedTime" value="22:00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-cyan-400 font-bold focus:border-blue-500 focus:outline-none">
                     </div>
                 </div>
                 <div class="border-t border-slate-800 pt-2 space-y-2">
@@ -480,7 +488,7 @@
         <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 text-slate-100 my-auto electric-glow">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                 <div>
-                    <span class="text-[9px] font-extrabold uppercase bg-amber-500 text-slate-950 px-2 py-0.5 rounded tracking-widest">PLATE CALCULATOR</span>
+                    <span class="text-[9px] font-extrabold uppercase bg-amber-500 text-slate-950 px-2 py-0.5 rounded tracking-widest">A-SERIES WARM-UP SETS</span>
                     <h2 id="warmupExName" class="font-black text-base text-slate-100 mt-1">Exercise Warm-Up</h2>
                 </div>
                 <button onclick="closeWarmupModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
@@ -534,13 +542,13 @@
         </div>
     </div>
 
-    <!-- ADD PEPTIDE MODAL -->
+    <!-- ADD / EDIT PEPTIDE MODAL -->
     <div id="peptideModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-slate-900 border-2 border-blue-500/80 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4 text-slate-100 my-auto electric-glow">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                 <div>
                     <span class="text-[9px] font-extrabold uppercase bg-blue-500 text-white px-2 py-0.5 rounded tracking-widest">CUSTOM PROTOCOL</span>
-                    <h2 class="font-black text-lg text-slate-100 mt-1">Add Biohack Compound</h2>
+                    <h2 id="peptideModalTitle" class="font-black text-lg text-slate-100 mt-1">Add Biohack Compound</h2>
                 </div>
                 <button onclick="closePeptideModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
             </div>
@@ -572,7 +580,7 @@
                 </div>
             </div>
 
-            <button onclick="saveCustomPeptide()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-black py-3 rounded-xl shadow-lg transition electric-glow">Save Peptide Protocol</button>
+            <button id="peptideSaveBtn" onclick="saveCustomPeptide()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-black py-3 rounded-xl shadow-lg transition electric-glow">Save Peptide Protocol</button>
         </div>
     </div>
 
@@ -623,7 +631,7 @@
         </div>
     </div>
 
-    <!-- FLOATING REST TIMER WIDGET WITH WEARABLE HR DISPLAY -->
+    <!-- FLOATING REST TIMER WIDGET WITH WEARABLE HR DISPLAY & AUDIO ALERT -->
     <div id="floatingTimerWidget" class="fixed bottom-0 left-0 right-0 z-50 p-2 bg-slate-950/95 backdrop-blur-md border-t border-blue-900/40 shadow-2xl">
         <div class="max-w-3xl mx-auto flex items-center justify-between px-2 gap-2">
             <div id="timerIdleView" class="flex items-center justify-between w-full">
@@ -663,6 +671,7 @@
         let currentPhase, currentWeek, currentDay;
         let timerInterval = null;
         let timerSecondsRemaining = 0;
+        let editingPeptideId = null;
 
         // WEARABLE BLUETOOTH BLE STATE
         let bluetoothDevice = null;
@@ -736,6 +745,7 @@
             if (p.rdlMax) document.getElementById('ob_rdl').value = p.rdlMax;
             if (p.wakeTime) document.getElementById('ob_wakeTime').value = p.wakeTime;
             if (p.liftTime) document.getElementById('ob_liftTime').value = p.liftTime;
+            if (p.bedTime) document.getElementById('ob_bedTime').value = p.bedTime || '22:00';
             document.getElementById('onboardingModal').classList.remove('hidden');
         }
 
@@ -744,6 +754,7 @@
             const goal = document.getElementById('ob_goal').value || 'hypertrophy';
             const wakeTime = document.getElementById('ob_wakeTime').value || '06:00';
             const liftTime = document.getElementById('ob_liftTime').value || '07:30';
+            const bedTime = document.getElementById('ob_bedTime').value || '22:00';
 
             let tKcal = Math.round(weight * (goal === 'hypertrophy' ? 16 : goal === 'recomp' ? 14 : 12));
             let rKcal = Math.round(weight * (goal === 'hypertrophy' ? 13.5 : goal === 'recomp' ? 12 : 10));
@@ -759,6 +770,7 @@
                 rdlMax: parseFloat(document.getElementById('ob_rdl').value) || 275,
                 wakeTime: wakeTime,
                 liftTime: liftTime,
+                bedTime: bedTime,
                 trainingKcal: tKcal,
                 restKcal: rKcal
             };
@@ -769,6 +781,7 @@
             if (document.getElementById('dash_bodyWeight')) document.getElementById('dash_bodyWeight').value = weight;
             if (document.getElementById('nutr_wakeTime')) document.getElementById('nutr_wakeTime').value = wakeTime;
             if (document.getElementById('nutr_liftTime')) document.getElementById('nutr_liftTime').value = liftTime;
+            if (document.getElementById('nutr_bedTime')) document.getElementById('nutr_bedTime').value = bedTime;
 
             loadProfileHeader();
             renderDashboardWidgets();
@@ -830,10 +843,12 @@
         function saveScheduleTimings() {
             const wake = document.getElementById('nutr_wakeTime')?.value || '06:00';
             const lift = document.getElementById('nutr_liftTime')?.value || '07:30';
+            const bed = document.getElementById('nutr_bedTime')?.value || '22:00';
 
             const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
             p.wakeTime = wake;
             p.liftTime = lift;
+            p.bedTime = bed;
             localStorage.setItem('prime_client_profile', JSON.stringify(p));
 
             renderNutrition();
@@ -843,8 +858,8 @@
         function addMinutesToTime(timeStr, minsToAdd) {
             if (!timeStr) timeStr = '07:30';
             let parts = timeStr.split(':').map(Number);
-            let h = isNaN(parts) ? 7 : parts;
-            let m = isNaN(parts) ? 0 : parts;
+            let h = isNaN(parts[0]) ? 7 : parts[0];
+            let m = isNaN(parts[1]) ? 0 : parts[1];
             
             let totalMins = h * 60 + m + minsToAdd;
             totalMins = (totalMins + 14400) % 1440;
@@ -860,16 +875,20 @@
         function getMealSchedule() {
             const wakeInput = document.getElementById('nutr_wakeTime')?.value;
             const liftInput = document.getElementById('nutr_liftTime')?.value;
+            const bedInput = document.getElementById('nutr_bedTime')?.value;
 
             const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
             const wakeTime = wakeInput || p.wakeTime || '06:00';
             const liftTime = liftInput || p.liftTime || '07:30';
+            const bedTime = bedInput || p.bedTime || '22:00';
 
             return [
-                { id: 1, title: 'Meal 1 (Pre-Workout Intra Glycogen)', time: addMinutesToTime(liftTime, -60), desc: 'Fast-acting carbs + 30g whey/egg protein for workout glycogen loading.' },
-                { id: 2, title: 'Meal 2 (Post-Workout Anabolic Window)', time: addMinutesToTime(liftTime, 45), desc: '40g lean protein + high-GI carbs to drive nutrients into tissue.' },
-                { id: 3, title: 'Meal 3 (Mid-Day Sustained Fuel)', time: addMinutesToTime(wakeTime, 420), desc: 'Complex carbs (rice/oats) + high-micronutrient greens + omega-3 fats.' },
-                { id: 4, title: 'Meal 4 (Nocturnal GH & Hormone Repair)', time: addMinutesToTime(wakeTime, 840), desc: 'Slow-digesting casein/beef protein + magnesium & zinc.' }
+                { id: 1, title: '1. Wake-Up & Hydration Anchor', time: addMinutesToTime(wakeTime, 0), desc: 'Immediate 16-24 oz water + electrolytes & morning biohack compounds upon waking.' },
+                { id: 2, title: '2. Pre-Workout Fuel (15m Pre-Lift)', time: addMinutesToTime(liftTime, -15), desc: 'Fast-acting carbs & amino acids 15 minutes prior to lifting.' },
+                { id: 3, title: '3. Post-Workout Anabolic Meal (30m Post-Lift)', time: addMinutesToTime(liftTime, 30), desc: 'Lean protein + high-GI carbs 30 minutes post-workout for muscle repair.' },
+                { id: 4, title: '4. Lunch (3.5h Post-Workout)', time: addMinutesToTime(liftTime, 210), desc: 'Sustained complex carbs + lean protein + micronutrient greens 3.5 hours post-workout.' },
+                { id: 5, title: '5. Afternoon Snack (3.5h Post-Lunch)', time: addMinutesToTime(liftTime, 420), desc: 'Protein snack + healthy fats 3.5 hours after lunch to maintain nitrogen balance.' },
+                { id: 6, title: '6. Dinner (3h Before Bed)', time: addMinutesToTime(bedTime, -180), desc: 'Whole food protein + vegetables + healthy fats 3 hours before sleep.' }
             ];
         }
 
@@ -926,7 +945,7 @@
                 phase: currentPhase || 'Phase 1',
                 week: currentWeek || 'Week 1',
                 day: currentDay || 'Day 1',
-                mealsCompleted: `${mealCheckedCount}/4 Meals`,
+                mealsCompleted: `${mealCheckedCount}/6 Meals`,
                 recoveryScores: {
                     pump: document.getElementById('scorePump')?.value || '-',
                     joints: document.getElementById('scoreJoints')?.value || '-',
@@ -939,6 +958,7 @@
                 sessionNotes: document.getElementById('sessionNotes')?.value || '',
                 wakeTime: document.getElementById('nutr_wakeTime')?.value || profile.wakeTime || '06:00',
                 liftTime: document.getElementById('nutr_liftTime')?.value || profile.liftTime || '07:30',
+                bedTime: document.getElementById('nutr_bedTime')?.value || profile.bedTime || '22:00',
                 peptidesDone: peptidesDone,
                 streak: Object.keys(historyLog).length,
                 setLogs: setLogs
@@ -1019,7 +1039,7 @@
                     fuelingEl.innerHTML = `
                         <div class="flex items-center justify-between text-xs">
                             <div>
-                                <span class="font-black text-cyan-400 text-xs">🎉 All 4 Fueling Windows Completed!</span>
+                                <span class="font-black text-cyan-400 text-xs">🎉 All 6 Fueling Windows Completed!</span>
                                 <span class="text-slate-400 block text-[9px] mt-0.5">Optimal nutrient timing achieved for today.</span>
                             </div>
                             <span class="bg-cyan-500/10 text-cyan-400 text-[9px] font-black px-2 py-1 rounded border border-cyan-500/20">100% DONE</span>
@@ -1187,7 +1207,7 @@
 
             const pctMatch = wtStr.match(/(\d+(?:\.\d+)?)%/);
             if (pctMatch) {
-                const pct = parseFloat(pctMatch) / 100.0;
+                const pct = parseFloat(pctMatch[1]) / 100.0;
                 let baseMax = p.benchMax || 225;
 
                 if (wtLower.includes('ohp') || exNameLower.includes('ohp') || exNameLower.includes('shoulder') || exNameLower.includes('arnold') || exNameLower.includes('overhead')) {
@@ -1214,7 +1234,7 @@
             }
 
             const numMatch = wtStr.match(/\d+/);
-            if (numMatch) return { val: parseInt(numMatch), tag: loadTag };
+            if (numMatch) return { val: parseInt(numMatch[0]), tag: loadTag };
 
             return { val: wtStr || 'BW', tag: loadTag };
         }
@@ -1261,6 +1281,12 @@
                     ? `${calculatedTarget} lbs${loadTag} ${ex.Wt && ex.Wt.includes('%') ? '(' + ex.Wt + ')' : ''}`
                     : (ex.Wt || 'BW');
 
+                // ONLY SHOW WARM-UP SETS BUTTON FOR A-SERIES LIFTS
+                const isASeries = ex.Series && String(ex.Series).toUpperCase().trim().startsWith('A');
+                const wuButtonHtml = isASeries 
+                    ? `<button onclick="openWarmupModal('${ex.Exercise ? ex.Exercise.replace(/'/g, "\\'") : 'Exercise'}', '${calculatedTarget}')" class="text-[9px] bg-slate-950 hover:bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/40 font-bold ml-1.5 transition">🔥 WUSets</button>`
+                    : '';
+
                 let checksHtml = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">';
 
                 for (let s = 1; s <= sets; s++) {
@@ -1280,7 +1306,7 @@
                     checksHtml += `
                         <div class="flex items-center space-x-1 bg-slate-950 px-2 py-1.5 rounded-xl border ${isPR ? 'border-amber-500/60 ring-1 ring-amber-500/30' : 'border-slate-800'} text-[10px]">
                             <span class="font-black ${isPR ? 'text-amber-400' : 'text-blue-400'}">S${s}</span>
-                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="onSetCheckChange('${checkKey}', this.checked, ${exIdx}, ${s}, '${ex.Series || ''}', '${ex.Exercise ? ex.Exercise.replace(/'/g, '') : ''}')">
+                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="onSetCheckChange('${checkKey}', this.checked, ${exIdx}, ${s}, '${ex.Series || ''}', '${ex.Exercise ? ex.Exercise.replace(/'/g, "\\'") : ''}')">
                             <input type="text" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value); renderWorkout();" class="w-full bg-slate-900 border ${isPR ? 'border-amber-500/80 text-amber-300' : 'border-slate-700 text-blue-300'} rounded text-center font-bold focus:outline-none focus:border-blue-500 py-1 text-[10px]">
                             ${prBadge}
                         </div>
@@ -1292,7 +1318,7 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-1 shadow-lg">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-extrabold text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">${ex.Series || 'Ex'}</span>
-                            <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${displayTargetLabel}</strong><button onclick="openWarmupModal('${ex.Exercise ? ex.Exercise.replace(/'/g, '') : 'Exercise'}', '${calculatedTarget}')" class="text-[9px] bg-slate-950 hover:bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/40 font-bold ml-1.5 transition">🔥 Plates</button></span>
+                            <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${displayTargetLabel}</strong>${wuButtonHtml}</span>
                         </div>
                         <h4 class="font-bold text-slate-100 text-xs">${ex.Exercise || 'Exercise'}</h4>
                         <div class="flex flex-wrap justify-between items-center text-[11px] text-slate-400 gap-y-1">
@@ -1431,7 +1457,7 @@
                 });
 
                 const countEl = document.getElementById('mealCompletionCount');
-                if (countEl) countEl.textContent = `${checkedCount} / 4 Completed`;
+                if (countEl) countEl.textContent = `${checkedCount} / ${meals.length} Completed`;
             }
         }
 
@@ -1542,7 +1568,10 @@
                                     <h3 class="font-bold text-xs text-slate-100 mt-1">${item.name} (${item.mg} mg Vial)</h3>
                                 </div>
                             </div>
-                            <button onclick="deletePeptide('${item.id}')" class="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1">Delete</button>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openPeptideModal('${item.id}')" class="text-blue-400 hover:text-blue-300 text-xs font-bold px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg">Edit</button>
+                                <button onclick="deletePeptide('${item.id}')" class="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg">Delete</button>
+                            </div>
                         </div>
                         <div class="grid grid-cols-3 gap-2 text-xs text-center">
                             <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
@@ -1570,8 +1599,39 @@
             renderDashboardWidgets();
         }
 
-        function openPeptideModal() { document.getElementById('peptideModal').classList.remove('hidden'); }
-        function closePeptideModal() { document.getElementById('peptideModal').classList.add('hidden'); }
+        function openPeptideModal(id = null) {
+            editingPeptideId = id;
+            const modalTitle = document.getElementById('peptideModalTitle');
+            const saveBtn = document.getElementById('peptideSaveBtn');
+
+            if (id) {
+                const peptides = getPeptides();
+                const item = peptides.find(p => p.id === id);
+                if (item) {
+                    document.getElementById('pep_name').value = item.name || '';
+                    document.getElementById('pep_mg').value = item.mg || 10;
+                    document.getElementById('pep_bac').value = item.bac || 2.0;
+                    document.getElementById('pep_dose').value = item.dose || 250;
+                    document.getElementById('pep_sched').value = item.sched || 'Daily';
+                    if (modalTitle) modalTitle.textContent = "Edit Biohack Compound";
+                    if (saveBtn) saveBtn.textContent = "Update Peptide Protocol";
+                }
+            } else {
+                document.getElementById('pep_name').value = '';
+                document.getElementById('pep_mg').value = 10;
+                document.getElementById('pep_bac').value = 2.0;
+                document.getElementById('pep_dose').value = 250;
+                document.getElementById('pep_sched').value = 'Daily';
+                if (modalTitle) modalTitle.textContent = "Add Biohack Compound";
+                if (saveBtn) saveBtn.textContent = "Save Peptide Protocol";
+            }
+            document.getElementById('peptideModal').classList.remove('hidden');
+        }
+
+        function closePeptideModal() {
+            editingPeptideId = null;
+            document.getElementById('peptideModal').classList.add('hidden');
+        }
 
         function saveCustomPeptide() {
             const name = document.getElementById('pep_name').value || 'Custom Peptide';
@@ -1580,8 +1640,13 @@
             const dose = parseFloat(document.getElementById('pep_dose').value) || 250;
             const sched = document.getElementById('pep_sched').value || 'Daily';
 
-            const peptides = getPeptides();
-            peptides.push({ id: Date.now().toString(), name, mg, bac, dose, sched });
+            let peptides = getPeptides();
+
+            if (editingPeptideId) {
+                peptides = peptides.map(p => p.id === editingPeptideId ? { ...p, name, mg, bac, dose, sched } : p);
+            } else {
+                peptides.push({ id: Date.now().toString(), name, mg, bac, dose, sched });
+            }
 
             localStorage.setItem('tx_peptide_protocols', JSON.stringify(peptides));
             closePeptideModal();
@@ -1590,6 +1655,7 @@
         }
 
         function deletePeptide(id) {
+            if (!confirm("Delete this peptide compound from your active protocol?")) return;
             let peptides = getPeptides();
             peptides = peptides.filter(p => p.id !== id);
             localStorage.setItem('tx_peptide_protocols', JSON.stringify(peptides));
@@ -1765,9 +1831,45 @@
             ctx.fillText('HIGH-PERFORMANCE HYPERTROPHY & BIOHACK OS', 540, 1550);
 
             const link = document.createElement('a');
-            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')}.png`;
+            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')[0]}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
+        }
+
+        // LOUD AUDIO ALERT FOR TIMER EXPIRATION
+        function playLoudTimerBeep() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+                
+                const beeps = [
+                    { time: now, freq: 1046.50 },        // C6
+                    { time: now + 0.18, freq: 1318.51 }, // E6
+                    { time: now + 0.36, freq: 1567.98 }, // G6
+                    { time: now + 0.54, freq: 2093.00 }  // C7
+                ];
+
+                beeps.forEach(b => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'square'; // Loud piercing wave
+                    osc.frequency.setValueAtTime(b.freq, b.time);
+                    gain.gain.setValueAtTime(0.7, b.time);
+                    gain.gain.exponentialRampToValueAtTime(0.001, b.time + 0.15);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(b.time);
+                    osc.stop(b.time + 0.15);
+                });
+
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200, 100, 300]);
+                }
+            } catch (e) {
+                console.log('Audio playback error:', e);
+            }
         }
 
         function startRestTimer(seconds) {
@@ -1779,8 +1881,12 @@
 
             timerInterval = setInterval(() => {
                 timerSecondsRemaining--;
-                if (timerSecondsRemaining <= 0) stopRestTimer();
-                else updateTimerDisplay();
+                if (timerSecondsRemaining <= 0) {
+                    playLoudTimerBeep();
+                    stopRestTimer();
+                } else {
+                    updateTimerDisplay();
+                }
             }, 1000);
         }
 
@@ -1855,7 +1961,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')}.json`);
+            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
@@ -1864,7 +1970,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files;
+            const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1900,6 +2006,8 @@
                     const pwaBtn = document.getElementById('pwaInstallBtn');
                     if (pwaBtn) pwaBtn.classList.add('hidden');
                 });
+            } else {
+                alert("To install on Samsung / Chrome: tap the 3 dots menu (⋮) -> select 'Add to Home screen' or 'Install app'.");
             }
         }
 
@@ -2047,7 +2155,7 @@
                         const week = parts[1] || 'Week';
                         const day = parts[2] || 'Day';
                         const exIdx = parseInt(parts[3]) || 0;
-                        const setNum = parts[5]?.replace('s', '') || '1';
+                        const setNum = parts[4]?.replace('wt', '')?.replace('s', '') || '1';
 
                         const exObj = PROGRAM_DATA[phase]?.[week]?.[day]?.[exIdx];
                         if (exObj) {
