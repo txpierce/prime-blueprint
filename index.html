@@ -753,8 +753,9 @@
 
             // Meals completed log
             let mealCheckedCount = 0;
-            [1, 2, 3, 4].forEach(m => {
-                if (localStorage.getItem(`meal_done_${todayStr}_${m}`) === 'true') mealCheckedCount++;
+            const meals = getMealSchedule();
+            meals.forEach(m => {
+                if (localStorage.getItem(`meal_done_${todayStr}_${m.id}`) === 'true') mealCheckedCount++;
             });
 
             const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
@@ -987,6 +988,21 @@
             return str;
         }
 
+        // DYNAMIC PHASE-SCOPED WEIGHT ENGINE
+        function getPhaseMaxWeight(phase, exIdx, setNum, defaultWt) {
+            let maxLogged = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(`${phase}_`) && key.endsWith(`_${exIdx}_wt_s${setNum}`)) {
+                    const val = parseFloat(localStorage.getItem(key));
+                    if (!isNaN(val) && val > maxLogged) {
+                        maxLogged = val;
+                    }
+                }
+            }
+            return maxLogged > 0 ? `${maxLogged} lbs` : (defaultWt || 'BW');
+        }
+
         function renderWorkout() {
             currentPhase = document.getElementById('phaseSelect').value;
             currentWeek = document.getElementById('weekSelect').value;
@@ -1010,8 +1026,10 @@
                     const weightKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_wt_s${s}`;
                     
                     const checked = localStorage.getItem(checkKey) === 'true';
-                    const targetWeight = ex.Wt || 'BW';
-                    const savedWeight = localStorage.getItem(weightKey) !== null ? localStorage.getItem(weightKey) : targetWeight;
+                    
+                    // Dynamic Phase-Scoped Target Weight Lookup
+                    const dynamicTarget = getPhaseMaxWeight(currentPhase, exIdx, s, ex.Wt);
+                    const savedWeight = localStorage.getItem(weightKey) !== null ? localStorage.getItem(weightKey) : dynamicTarget;
 
                     checksHtml += `
                         <div class="flex items-center space-x-1.5 bg-slate-950 px-2 py-1.5 rounded-xl border border-slate-800 text-[10px]">
