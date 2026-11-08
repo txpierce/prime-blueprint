@@ -89,7 +89,7 @@
             <!-- DASHBOARD WIDGETS GRID -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 
-                <!-- NEXT FUELING WINDOW WIDGET -->
+                <!-- NEXT UNCHECKED FUELING WINDOW WIDGET -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg space-y-2">
                     <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block flex items-center gap-1">⏰ Next Fueling Window</span>
                     <div id="dashFuelingWidget" class="bg-slate-950 p-2.5 rounded-xl border border-slate-800/80">
@@ -103,6 +103,55 @@
                     <div id="dashPeptidesWidget" class="space-y-1 text-xs">
                         <span class="text-slate-400 text-[11px]">Loading compounds...</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- WEARABLES & RECOVERY OS WIDGET (GARMIN • WHOOP • APPLE WATCH) -->
+            <div class="bg-slate-900 border border-blue-900/40 rounded-2xl p-4 shadow-xl space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <div>
+                        <span class="text-[9px] font-extrabold uppercase bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20">Health Tracker OS</span>
+                        <h3 class="font-extrabold text-xs text-slate-100 mt-1 flex items-center gap-1.5">
+                            <span>⌚</span> Wearables Sync (1. Garmin ➔ 2. Whoop ➔ 3. Apple Watch)
+                        </h3>
+                    </div>
+                    <button onclick="connectBluetoothHeartRate()" class="text-[10px] bg-blue-600 hover:bg-blue-500 text-white font-extrabold px-2.5 py-1 rounded-xl transition shadow flex items-center gap-1">
+                        <span>📡</span> BLE Heart Rate
+                    </button>
+                </div>
+
+                <!-- BLE HR LIVE DISPLAY -->
+                <div id="dashBleHrContainer" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                        <span id="bleHrStatus" class="text-[11px] font-extrabold text-slate-300">BLE Sensor: Ready to connect (Garmin / Whoop / Apple)</span>
+                    </div>
+                    <span id="dashLiveBpm" class="text-sm font-black text-cyan-400">-- BPM</span>
+                </div>
+
+                <!-- WEARABLE METRICS INPUTS GRID -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <span class="block text-[9px] text-slate-400 font-bold uppercase mb-1">Garmin Body Battery / Strain</span>
+                        <input type="text" id="wear_bodyBattery" placeholder="85 / 14.2" oninput="saveWearableStats()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-center font-bold text-cyan-400 focus:outline-none">
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <span class="block text-[9px] text-slate-400 font-bold uppercase mb-1">HRV (ms)</span>
+                        <input type="number" id="wear_hrv" placeholder="75" oninput="saveWearableStats()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-center font-bold text-blue-400 focus:outline-none">
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <span class="block text-[9px] text-slate-400 font-bold uppercase mb-1">Sleep Score / Hours</span>
+                        <input type="text" id="wear_sleep" placeholder="88% / 7.8h" oninput="saveWearableStats()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-center font-bold text-slate-200 focus:outline-none">
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <span class="block text-[9px] text-slate-400 font-bold uppercase mb-1">Resting HR (BPM)</span>
+                        <input type="number" id="wear_restingHr" placeholder="52" oninput="saveWearableStats()" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-center font-bold text-cyan-400 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    <span class="text-[9px] text-slate-400 font-bold">iOS Users: Auto-sync Apple Watch HealthKit metrics via 1-click Shortcut</span>
+                    <button onclick="copyAppleShortcutHelp()" class="text-[9px] bg-slate-950 hover:bg-slate-800 text-blue-400 px-2 py-1 rounded border border-slate-800 font-bold">🍎 Copy Apple Shortcut JSON</button>
                 </div>
             </div>
 
@@ -440,11 +489,17 @@
         </div>
     </div>
 
-    <!-- FLOATING REST TIMER WIDGET -->
+    <!-- FLOATING REST TIMER WIDGET WITH WEARABLE HR DISPLAY -->
     <div id="floatingTimerWidget" class="fixed bottom-0 left-0 right-0 z-50 p-2 bg-slate-950/95 backdrop-blur-md border-t border-blue-900/40 shadow-2xl">
         <div class="max-w-3xl mx-auto flex items-center justify-between px-2 gap-2">
             <div id="timerIdleView" class="flex items-center justify-between w-full">
-                <span class="text-[10px] font-extrabold text-blue-400 uppercase tracking-wider flex items-center gap-1">⏱️ Rest Timer</span>
+                <div class="flex items-center space-x-2">
+                    <span class="text-[10px] font-extrabold text-blue-400 uppercase tracking-wider flex items-center gap-1">⏱️ Rest Timer</span>
+                    <button onclick="connectBluetoothHeartRate()" class="bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-slate-800 text-[10px] font-extrabold px-2 py-0.5 rounded-lg transition flex items-center gap-1">
+                        <span>📡</span> BLE HR
+                    </button>
+                    <span id="liveBpmText" class="text-[11px] font-black text-red-400">-- BPM</span>
+                </div>
                 <div class="flex items-center space-x-1.5">
                     <button onclick="startRestTimer(30)" class="bg-slate-900 hover:bg-blue-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">30s</button>
                     <button onclick="startRestTimer(60)" class="bg-slate-900 hover:bg-blue-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">60s</button>
@@ -475,12 +530,18 @@
         let timerInterval = null;
         let timerSecondsRemaining = 0;
 
+        // WEARABLE BLUETOOTH BLE STATE
+        let bluetoothDevice = null;
+        let hrCharacteristic = null;
+        let currentHeartRate = 0;
+
         window.addEventListener('DOMContentLoaded', async () => {
             startLiveClock();
             checkOnboarding();
             loadProfileHeader();
             loadHydration();
             loadCheckinScores();
+            loadWearableStats();
             updateStreakDisplay();
             renderDashboardWidgets();
             renderPeptides();
@@ -626,6 +687,37 @@
             renderDashboardWidgets();
         }
 
+        // TIME MATH HELPERS FOR DYNAMIC FUELING TIMINGS
+        function addMinutesToTime(timeStr, minsToAdd) {
+            if (!timeStr) timeStr = '07:30';
+            let parts = timeStr.split(':').map(Number);
+            let h = parts[0] || 7;
+            let m = parts[1] || 0;
+            
+            let totalMins = h * 60 + m + minsToAdd;
+            totalMins = (totalMins + 1440) % 1440;
+            
+            let newH = Math.floor(totalMins / 60);
+            let newM = totalMins % 60;
+            let ampm = newH >= 12 ? 'PM' : 'AM';
+            let h12 = newH % 12 || 12;
+            let mStr = String(newM).padStart(2, '0');
+            return `${h12}:${mStr} ${ampm}`;
+        }
+
+        function getMealSchedule() {
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            const wakeTime = p.wakeTime || '06:00';
+            const liftTime = p.liftTime || '07:30';
+
+            return [
+                { id: 1, title: 'Meal 1 (Pre-Workout Intra Glycogen)', time: addMinutesToTime(liftTime, -60), desc: 'Fast-acting carbs + 30g whey/egg protein for workout glycogen loading.' },
+                { id: 2, title: 'Meal 2 (Post-Workout Anabolic Window)', time: addMinutesToTime(liftTime, 45), desc: '40g lean protein + high-GI carbs to drive nutrients into tissue.' },
+                { id: 3, title: 'Meal 3 (Mid-Day Sustained Fuel)', time: addMinutesToTime(wakeTime, 420), desc: 'Complex carbs (rice/oats) + high-micronutrient greens + omega-3 fats.' },
+                { id: 4, title: 'Meal 4 (Nocturnal GH & Hormone Repair)', time: addMinutesToTime(wakeTime, 840), desc: 'Slow-digesting casein/beef protein + magnesium & zinc.' }
+            ];
+        }
+
         function saveAllDailyEntries() {
             const todayStr = new Date().toLocaleDateString('en-CA');
             const profile = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
@@ -686,6 +778,10 @@
                     joints: document.getElementById('scoreJoints')?.value || '-',
                     sleep: document.getElementById('scoreSleep')?.value || '-'
                 },
+                bodyBattery: document.getElementById('wear_bodyBattery')?.value || '-',
+                hrv: document.getElementById('wear_hrv')?.value || '-',
+                wearableSleep: document.getElementById('wear_sleep')?.value || '-',
+                restingHr: document.getElementById('wear_restingHr')?.value || '-',
                 sessionNotes: document.getElementById('sessionNotes')?.value || '',
                 wakeTime: profile.wakeTime || '06:00',
                 liftTime: profile.liftTime || '07:30',
@@ -704,7 +800,7 @@
 
             const notif = document.getElementById('saveNotification');
             if (notif) {
-                notif.textContent = `Daily Entry & Weight Synced to Per-Client Sheet tab!`;
+                notif.textContent = `Daily Entry & Wearable Metrics Synced to Google Sheets!`;
                 setTimeout(() => notif.textContent = '', 3000);
             }
         }
@@ -743,19 +839,42 @@
                 `;
             }
 
-            // 2. Next Fueling Window Widget
-            const liftTime = p.liftTime || '07:30';
+            // 2. Next UNCHECKED Fueling Window Widget
             const fuelingEl = document.getElementById('dashFuelingWidget');
             if (fuelingEl) {
-                fuelingEl.innerHTML = `
-                    <div class="flex items-center justify-between text-xs">
-                        <div>
-                            <span class="text-slate-400 block text-[9px] uppercase font-bold">Post-Lift Anabolic Window</span>
-                            <span class="font-extrabold text-blue-400">Meal 2 @ ${liftTime} + 45m</span>
+                const meals = getMealSchedule();
+                let nextMeal = null;
+
+                for (let m of meals) {
+                    const isDone = localStorage.getItem(`meal_done_${todayStr}_${m.id}`) === 'true';
+                    if (!isDone) {
+                        nextMeal = m;
+                        break;
+                    }
+                }
+
+                if (nextMeal) {
+                    fuelingEl.innerHTML = `
+                        <div class="flex items-center justify-between text-xs">
+                            <div>
+                                <span class="text-slate-400 block text-[9px] uppercase font-bold">${nextMeal.title}</span>
+                                <span class="font-black text-cyan-400 text-xs">Scheduled: ${nextMeal.time}</span>
+                            </div>
+                            <span class="bg-blue-500/10 text-blue-400 text-[9px] font-black px-2 py-1 rounded border border-blue-500/20">UP NEXT ⚡</span>
                         </div>
-                        <span class="bg-blue-500/10 text-blue-400 text-[9px] font-black px-2 py-1 rounded border border-blue-500/20">PRE-LOGGED</span>
-                    </div>
-                `;
+                        <p class="text-[10px] text-slate-400 mt-1 line-clamp-1">${nextMeal.desc}</p>
+                    `;
+                } else {
+                    fuelingEl.innerHTML = `
+                        <div class="flex items-center justify-between text-xs">
+                            <div>
+                                <span class="font-black text-cyan-400 text-xs">🎉 All 4 Fueling Windows Completed!</span>
+                                <span class="text-slate-400 block text-[9px] mt-0.5">Optimal nutrient timing achieved for today.</span>
+                            </div>
+                            <span class="bg-cyan-500/10 text-cyan-400 text-[9px] font-black px-2 py-1 rounded border border-cyan-500/20">100% DONE</span>
+                        </div>
+                    `;
+                }
             }
 
             // 3. Today's Peptides Widget
@@ -827,6 +946,30 @@
             renderWorkout();
         }
 
+        // CLEAN REP STRING SANITIZER TO PREVENT DATE PARSING BUGS
+        function cleanRepString(val) {
+            if (val === null || val === undefined) return '-';
+            let str = String(val).trim();
+            if (!str) return '-';
+
+            // Convert Date strings like "Sun Aug 10 2026 00:00:00" back to clean "8-10"
+            if (str.includes('GMT') || str.includes('T00:') || /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(str)) {
+                let d = new Date(str);
+                if (!isNaN(d.getTime())) {
+                    let m = d.getMonth() + 1;
+                    let day = d.getDate();
+                    return `${m}-${day}`;
+                }
+            }
+            let isoMatch = str.match(/^\d{4}-(\d{2})-(\d{2})/);
+            if (isoMatch) {
+                let m = parseInt(isoMatch[1], 10);
+                let day = parseInt(isoMatch[2], 10);
+                return `${m}-${day}`;
+            }
+            return str;
+        }
+
         function renderWorkout() {
             currentPhase = document.getElementById('phaseSelect').value;
             currentWeek = document.getElementById('weekSelect').value;
@@ -839,6 +982,7 @@
 
             exercises.forEach((ex, exIdx) => {
                 const sets = parseInt(ex.Sets) || 1;
+                const cleanReps = cleanRepString(ex.Reps);
                 let checksHtml = '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">';
 
                 for (let s = 1; s <= sets; s++) {
@@ -863,11 +1007,11 @@
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-1 shadow-lg">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-extrabold text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">${ex.Series || 'Ex'}</span>
-                            <span class="text-[11px] text-slate-400 font-semibold">Recommended Target: <strong class="text-cyan-400 font-bold">${ex.Wt || 'BW'}</strong></span>
+                            <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${ex.Wt || 'BW'}</strong></span>
                         </div>
                         <h4 class="font-bold text-slate-100 text-xs">${ex.Exercise || 'Exercise'}</h4>
                         <div class="flex justify-between text-[11px] text-slate-400">
-                            <span>Sets: <strong>${ex.Sets || '-'}</strong> | Reps: <strong>${ex.Reps || '-'}</strong></span>
+                            <span>Sets: <strong class="text-slate-200">${ex.Sets || '-'}</strong> | Reps: <strong class="text-cyan-400 font-bold">${cleanReps}</strong></span>
                             <span>Rest: <strong>${ex.Rest || '-'}</strong> | RPE: <strong>${ex.RPE || '-'}</strong></span>
                         </div>
                         ${checksHtml}
@@ -937,20 +1081,14 @@
                 `;
             }
 
-            // Render Meal Schedule Checklist
+            // Render Dynamic Meal Schedule Checklist
             const todayStr = new Date().toLocaleDateString('en-CA');
             const mealList = document.getElementById('mealScheduleList');
             if (mealList) {
-                const liftTimeStr = p.liftTime || '07:30';
-                const meals = [
-                    { id: 1, title: 'Meal 1 (Pre-Workout Intra Glycogen)', time: `${liftTimeStr} (60m prior)`, desc: 'Fast-acting carbs + 30g whey/egg protein for workout glycogen loading.' },
-                    { id: 2, title: 'Meal 2 (Post-Workout Anabolic Window)', time: `${liftTimeStr} (+45m post)`, desc: '40g lean protein + high-GI carbs to drive nutrients into tissue.' },
-                    { id: 3, title: 'Meal 3 (Mid-Day Sustained Fuel)', time: '13:00 (Mid-Day)', desc: 'Complex carbs (rice/oats) + high-micronutrient greens + omega-3 fats.' },
-                    { id: 4, title: 'Meal 4 (Nocturnal GH & Hormone Repair)', time: '20:00 (Pre-Bed)', desc: 'Slow-digesting casein/beef protein + magnesium & zinc.' }
-                ];
-
+                const meals = getMealSchedule();
                 let checkedCount = 0;
                 mealList.innerHTML = '';
+
                 meals.forEach(m => {
                     const checked = localStorage.getItem(`meal_done_${todayStr}_${m.id}`) === 'true';
                     if (checked) checkedCount++;
@@ -961,7 +1099,7 @@
                             <div class="flex-1">
                                 <div class="flex items-center justify-between">
                                     <span class="font-bold text-blue-400">${m.title}</span>
-                                    <span class="text-[9px] text-slate-400 font-bold bg-slate-900 px-2 py-0.5 rounded">${m.time}</span>
+                                    <span class="text-[9px] font-extrabold text-cyan-400 bg-blue-950/80 px-2 py-0.5 rounded border border-blue-800/40">Target: ${m.time}</span>
                                 </div>
                                 <p class="text-[10px] text-slate-400 mt-0.5">${m.desc}</p>
                             </div>
@@ -978,6 +1116,7 @@
             const todayStr = new Date().toLocaleDateString('en-CA');
             localStorage.setItem(`meal_done_${todayStr}_${mealId}`, isChecked);
             renderNutrition();
+            renderDashboardWidgets();
         }
 
         // PEPTIDE PROTOCOL MANAGER WITH INTAKE CHECKBOXES
@@ -1068,6 +1207,83 @@
             localStorage.setItem('tx_peptide_protocols', JSON.stringify(peptides));
             renderPeptides();
             renderDashboardWidgets();
+        }
+
+        // WEARABLE BLUETOOTH BLE HEART RATE CONNECTION (GARMIN • WHOOP • APPLE WATCH)
+        async function connectBluetoothHeartRate() {
+            const statusEl = document.getElementById('bleHrStatus');
+            try {
+                if (!navigator.bluetooth) {
+                    alert("Web Bluetooth is not supported on this browser. Try Chrome, Edge, or Bluefy on iOS.");
+                    return;
+                }
+                if (statusEl) statusEl.textContent = "SEARCHING FOR GARMIN / WHOOP / APPLE BLE...";
+                
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['heart_rate'] }]
+                });
+
+                bluetoothDevice.addEventListener('gattserverdisconnected', onGattDisconnected);
+                const server = await bluetoothDevice.gatt.connect();
+                const service = await server.getPrimaryService('heart_rate');
+                hrCharacteristic = await service.getCharacteristic('heart_rate_measurement');
+                await hrCharacteristic.startNotifications();
+                hrCharacteristic.addEventListener('characteristicvaluechanged', handleHeartRateMeasurement);
+
+                if (statusEl) statusEl.textContent = `CONNECTED: ${bluetoothDevice.name || 'Wearable HR'}`;
+            } catch (err) {
+                console.error("Bluetooth HR error:", err);
+                if (statusEl) statusEl.textContent = "BLE CONNECTION CANCELLED OR FAILED";
+            }
+        }
+
+        function handleHeartRateMeasurement(event) {
+            const value = event.target.value;
+            const flags = value.getUint8(0);
+            let hr = 0;
+            if (flags & 0x01) {
+                hr = value.getUint16(1, true);
+            } else {
+                hr = value.getUint8(1);
+            }
+            currentHeartRate = hr;
+            const bpmText = document.getElementById('liveBpmText');
+            if (bpmText) bpmText.textContent = `${hr} BPM`;
+            const dashBpm = document.getElementById('dashLiveBpm');
+            if (dashBpm) dashBpm.textContent = `${hr} BPM`;
+        }
+
+        function onGattDisconnected() {
+            const statusEl = document.getElementById('bleHrStatus');
+            if (statusEl) statusEl.textContent = "DISCONNECTED";
+        }
+
+        function saveWearableStats() {
+            localStorage.setItem('tx_wear_bb', document.getElementById('wear_bodyBattery')?.value || '');
+            localStorage.setItem('tx_wear_hrv', document.getElementById('wear_hrv')?.value || '');
+            localStorage.setItem('tx_wear_sleep', document.getElementById('wear_sleep')?.value || '');
+            localStorage.setItem('tx_wear_rhr', document.getElementById('wear_restingHr')?.value || '');
+        }
+
+        function loadWearableStats() {
+            if (document.getElementById('wear_bodyBattery')) document.getElementById('wear_bodyBattery').value = localStorage.getItem('tx_wear_bb') || '';
+            if (document.getElementById('wear_hrv')) document.getElementById('wear_hrv').value = localStorage.getItem('tx_wear_hrv') || '';
+            if (document.getElementById('wear_sleep')) document.getElementById('wear_sleep').value = localStorage.getItem('tx_wear_sleep') || '';
+            if (document.getElementById('wear_restingHr')) document.getElementById('wear_restingHr').value = localStorage.getItem('tx_wear_rhr') || '';
+        }
+
+        function copyAppleShortcutHelp() {
+            const shortcutJson = {
+                type: "WEARABLE_SYNC",
+                clientName: JSON.parse(localStorage.getItem('prime_client_profile'))?.clientName || "Athlete",
+                date: new Date().toLocaleDateString('en-CA'),
+                hrv: 75,
+                bodyBattery: "85 / 14.2",
+                wearableSleep: "88% / 7.8h",
+                restingHr: 52
+            };
+            navigator.clipboard.writeText(JSON.stringify(shortcutJson, null, 2));
+            alert("Apple Shortcut JSON copied to clipboard! Paste into your iPhone Shortcut automation to post directly to Google Sheets.");
         }
 
         // INSTAGRAM STORY / STAT CARD MODAL & IMAGE GENERATOR
@@ -1170,7 +1386,7 @@
 
             // Trigger Image Download
             const link = document.createElement('a');
-            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')[0]}.png`;
+            link.download = `Prime_Blueprint_StatCard_${new Date().toISOString().split('T')}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
@@ -1261,7 +1477,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
