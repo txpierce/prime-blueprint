@@ -136,40 +136,52 @@
                 </div>
             </div>
 
-            <!-- HYDRATION & RECOVERY CHECK-IN -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- DAILY WEIGH-IN, HYDRATION & RECOVERY CHECK-IN -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                
+                <!-- DAILY WEIGH-IN WIDGET -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">💧 Daily Hydration Target</span>
-                        <span id="hydrationStatus" class="text-[10px] font-extrabold text-blue-400">0% (0 / 1 Gal)</span>
-                    </div>
-                    <div class="grid grid-cols-4 gap-1.5">
-                        <button onclick="setHydration(25)" id="hyd-25" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold py-1.5 rounded-xl text-slate-300 transition">25%</button>
-                        <button onclick="setHydration(50)" id="hyd-50" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold py-1.5 rounded-xl text-slate-300 transition">50%</button>
-                        <button onclick="setHydration(75)" id="hyd-75" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold py-1.5 rounded-xl text-slate-300 transition">75%</button>
-                        <button onclick="setHydration(100)" id="hyd-100" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold py-1.5 rounded-xl text-slate-300 transition">100%</button>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">⚖️ Daily Weigh-In</span>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="dash_bodyWeight" step="0.1" placeholder="190.0" oninput="updateDailyWeight(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-blue-400 font-black text-sm text-center focus:outline-none focus:border-blue-500">
+                        <span class="text-xs font-bold text-slate-400">lbs</span>
                     </div>
                 </div>
 
+                <!-- HYDRATION WIDGET -->
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg space-y-2">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">🦴 Daily Recovery Check-In</span>
-                    <div class="grid grid-cols-3 gap-2 text-[10px]">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">💧 Daily Hydration</span>
+                        <span id="hydrationStatus" class="text-[10px] font-extrabold text-blue-400">0%</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1">
+                        <button onclick="setHydration(25)" id="hyd-25" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold py-1 rounded-lg text-slate-300">25%</button>
+                        <button onclick="setHydration(50)" id="hyd-50" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold py-1 rounded-lg text-slate-300">50%</button>
+                        <button onclick="setHydration(75)" id="hyd-75" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold py-1 rounded-lg text-slate-300">75%</button>
+                        <button onclick="setHydration(100)" id="hyd-100" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[10px] font-bold py-1 rounded-lg text-slate-300">100%</button>
+                    </div>
+                </div>
+
+                <!-- RECOVERY SCORES WIDGET -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-lg space-y-2">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">🦴 Recovery Scores</span>
+                    <div class="grid grid-cols-3 gap-1.5 text-[10px]">
                         <div>
-                            <span class="block text-slate-400 font-semibold mb-1">Pump</span>
+                            <span class="block text-slate-400 font-semibold mb-0.5">Pump</span>
                             <select id="scorePump" onchange="saveCheckinScores()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-1 text-blue-400 font-bold">
-                                <option value="-">-</option><option value="1">1/5</option><option value="2">2/5</option><option value="3">3/5</option><option value="4">4/5</option><option value="5">5/5</option>
+                                <option value="-">-</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
                             </select>
                         </div>
                         <div>
-                            <span class="block text-slate-400 font-semibold mb-1">Joints</span>
+                            <span class="block text-slate-400 font-semibold mb-0.5">Joints</span>
                             <select id="scoreJoints" onchange="saveCheckinScores()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-1 text-blue-400 font-bold">
-                                <option value="-">-</option><option value="1">1/5</option><option value="2">2/5</option><option value="3">3/5</option><option value="4">4/5</option><option value="5">5/5</option>
+                                <option value="-">-</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
                             </select>
                         </div>
                         <div>
-                            <span class="block text-slate-400 font-semibold mb-1">Sleep</span>
+                            <span class="block text-slate-400 font-semibold mb-0.5">Sleep</span>
                             <select id="scoreSleep" onchange="saveCheckinScores()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-1 text-blue-400 font-bold">
-                                <option value="-">-</option><option value="1">1/5</option><option value="2">2/5</option><option value="3">3/5</option><option value="4">4/5</option><option value="5">5/5</option>
+                                <option value="-">-</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
                             </select>
                         </div>
                     </div>
@@ -557,6 +569,7 @@
             localStorage.setItem('prime_client_profile', JSON.stringify(profile));
             document.getElementById('onboardingModal').classList.add('hidden');
             
+            if (document.getElementById('dash_bodyWeight')) document.getElementById('dash_bodyWeight').value = weight;
             if (document.getElementById('nutr_wakeTime')) document.getElementById('nutr_wakeTime').value = wakeTime;
             if (document.getElementById('nutr_liftTime')) document.getElementById('nutr_liftTime').value = liftTime;
 
@@ -583,10 +596,21 @@
             if (nameEl) nameEl.textContent = `Welcome, ${p.clientName}`;
             if (detEl) detEl.textContent = `${p.weight} lbs • ${p.goal.toUpperCase()} TRACK • Prime Blueprint`;
 
+            if (document.getElementById('dash_bodyWeight')) document.getElementById('dash_bodyWeight').value = p.weight || 190;
+
             const mode = localStorage.getItem('tx_macro_mode') || 'training';
             const kcal = mode === 'rest' ? (p.restKcal || Math.round(p.weight * 13.5)) : (p.trainingKcal || Math.round(p.weight * 16));
             const kcalEl = document.getElementById('dashMacroKcal');
             if (kcalEl) kcalEl.textContent = `${kcal} kcal (${mode.toUpperCase()})`;
+        }
+
+        function updateDailyWeight(val) {
+            const w = parseFloat(val) || 190;
+            const p = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            p.weight = w;
+            localStorage.setItem('prime_client_profile', JSON.stringify(p));
+            loadProfileHeader();
+            renderNutrition();
         }
 
         function saveScheduleTimings() {
@@ -605,6 +629,7 @@
         function saveAllDailyEntries() {
             const todayStr = new Date().toLocaleDateString('en-CA');
             const profile = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
+            const currentWeight = parseFloat(document.getElementById('dash_bodyWeight')?.value) || profile.weight || 190;
 
             const setLogs = [];
             const exercises = PROGRAM_DATA[currentPhase]?.[currentWeek]?.[currentDay] || [];
@@ -635,7 +660,10 @@
             });
 
             // Meals completed log
-            const mealCheckedCount = [1,2,3,4].filter(m => localStorage.getItem(`meal_done_${todayStr}_${m}`) === 'true').length;
+            let mealCheckedCount = 0;
+            [1, 2, 3, 4].forEach(m => {
+                if (localStorage.getItem(`meal_done_${todayStr}_${m}`) === 'true') mealCheckedCount++;
+            });
 
             const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
             historyLog[todayStr] = { date: todayStr, logged: true };
@@ -647,10 +675,11 @@
                 date: todayStr,
                 clientName: profile.clientName || 'Client',
                 email: profile.email || 'Client',
+                bodyWeight: currentWeight,
+                waterPercentage: parseInt(localStorage.getItem('tx_hydration')) || 0,
                 phase: currentPhase || 'Phase 1',
                 week: currentWeek || 'Week 1',
                 day: currentDay || 'Day 1',
-                waterPercentage: parseInt(localStorage.getItem('tx_hydration')) || 0,
                 mealsCompleted: `${mealCheckedCount}/4 Meals`,
                 recoveryScores: {
                     pump: document.getElementById('scorePump')?.value || '-',
@@ -675,7 +704,7 @@
 
             const notif = document.getElementById('saveNotification');
             if (notif) {
-                notif.textContent = `Daily Entry & Sets Synced to Per-Client Sheet tab!`;
+                notif.textContent = `Daily Entry & Weight Synced to Per-Client Sheet tab!`;
                 setTimeout(() => notif.textContent = '', 3000);
             }
         }
@@ -1232,7 +1261,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')}.json`);
+            dlAnchor.setAttribute("download", `prime_blueprint_backup_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
