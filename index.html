@@ -14,6 +14,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .electric-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.35); }
+        .cyan-timer-glow { text-shadow: 0 0 12px rgba(34, 211, 238, 0.9), 0 0 24px rgba(6, 182, 212, 0.6); }
     </style>
 
     <!-- PWA MANIFEST LINK -->
@@ -631,8 +632,8 @@
         </div>
     </div>
 
-    <!-- FLOATING REST TIMER WIDGET WITH WEARABLE HR DISPLAY & AUDIO ALERT -->
-    <div id="floatingTimerWidget" class="fixed bottom-0 left-0 right-0 z-50 p-2 bg-slate-950/95 backdrop-blur-md border-t border-blue-900/40 shadow-2xl">
+    <!-- FLOATING REST TIMER WIDGET WITH NEON GLOW & WEARABLE HR DISPLAY -->
+    <div id="floatingTimerWidget" class="fixed bottom-0 left-0 right-0 z-50 p-2.5 bg-slate-950/95 backdrop-blur-md border-t border-blue-900/50 shadow-2xl transition-all duration-300">
         <div class="max-w-3xl mx-auto flex items-center justify-between px-2 gap-2">
             <div id="timerIdleView" class="flex items-center justify-between w-full">
                 <div class="flex items-center space-x-2">
@@ -643,20 +644,21 @@
                     <span id="liveBpmText" class="text-[11px] font-black text-red-400">-- BPM</span>
                 </div>
                 <div class="flex items-center space-x-1.5">
-                    <button onclick="startRestTimer(30)" class="bg-slate-900 hover:bg-blue-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">30s</button>
-                    <button onclick="startRestTimer(60)" class="bg-slate-900 hover:bg-blue-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">60s</button>
-                    <button onclick="startRestTimer(90)" class="bg-slate-900 hover:bg-blue-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">90s</button>
-                    <button onclick="startRestTimer(120)" class="bg-slate-900 hover:bg-blue-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">2m</button>
+                    <button onclick="startRestTimer(30)" class="bg-slate-900 hover:bg-cyan-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">30s</button>
+                    <button onclick="startRestTimer(60)" class="bg-slate-900 hover:bg-cyan-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">60s</button>
+                    <button onclick="startRestTimer(90)" class="bg-slate-900 hover:bg-cyan-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">90s</button>
+                    <button onclick="startRestTimer(120)" class="bg-slate-900 hover:bg-cyan-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">2m</button>
+                    <button onclick="startRestTimer(180)" class="bg-slate-900 hover:bg-cyan-600 hover:text-white text-slate-200 border border-slate-800 font-extrabold text-[10px] px-2.5 py-1 rounded-lg transition">3m</button>
                 </div>
             </div>
             <div id="timerActiveView" class="hidden flex items-center justify-between w-full">
                 <div class="flex items-center space-x-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping"></span>
-                    <span class="text-[10px] font-extrabold text-blue-400 uppercase tracking-wider">Resting...</span>
+                    <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping shadow-[0_0_10px_#22d3ee]"></span>
+                    <span class="text-[11px] font-black text-cyan-300 uppercase tracking-wider">Resting...</span>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <span id="timerCountdownText" class="text-base font-black text-blue-400 tracking-wider">01:30</span>
-                    <button onclick="stopRestTimer()" class="bg-red-950 text-red-200 border border-red-800 font-bold text-[10px] px-2.5 py-1 rounded-lg">Cancel</button>
+                    <span id="timerCountdownText" class="text-xl font-black text-cyan-400 tracking-wider cyan-timer-glow animate-pulse">01:30</span>
+                    <button onclick="stopRestTimer()" class="bg-red-950 hover:bg-red-900 text-red-200 border border-red-700/60 font-extrabold text-[10px] px-3 py-1 rounded-lg transition">Cancel</button>
                 </div>
             </div>
         </div>
@@ -1155,6 +1157,38 @@
             return str;
         }
 
+        // DYNAMIC PARSER FOR EXACT EXERCISE REST TIME IN SECONDS
+        function parseRestSeconds(restStr, seriesStr) {
+            if (!restStr || restStr === 'undefined' || restStr === 'null') return defaultSeriesRest(seriesStr);
+            let s = String(restStr).toLowerCase().trim();
+            
+            // Check for explicit minute notation (e.g. "2 min", "2.5m", "3min")
+            let minMatch = s.match(/(\d+(?:\.\d+)?)\s*(?:min|m\b)/);
+            if (minMatch) {
+                return Math.round(parseFloat(minMatch[1]) * 60);
+            }
+            
+            // Check for explicit second notation or plain integer (e.g. "120s", "90", "60")
+            let secMatch = s.match(/(\d+)/);
+            if (secMatch) {
+                let val = parseInt(secMatch[1]);
+                if (val <= 10 && !s.includes('s')) { // e.g. "2" meaning 2 minutes
+                    return val * 60;
+                }
+                return val;
+            }
+            return defaultSeriesRest(seriesStr);
+        }
+
+        function defaultSeriesRest(seriesStr) {
+            if (!seriesStr) return 90;
+            let s = String(seriesStr).toUpperCase();
+            if (s.includes('A')) return 120;
+            if (s.includes('B')) return 90;
+            if (s.includes('C') || s.includes('D')) return 60;
+            return 90;
+        }
+
         // DYNAMIC 1RM PERCENTAGE-TO-POUNDS ENGINE WITH EQUIPMENT CONTEXT TAGGING & UNILATERAL SPLIT
         function calculateWeightFromPct(ex) {
             if (!ex || !ex.Wt) return { val: 'BW', tag: '' };
@@ -1272,6 +1306,7 @@
                 const cleanReps = cleanRepString(ex.Reps);
                 const cleanRpe = cleanRpeString(ex.RPE);
                 const cleanTempo = ex.Tempo || '-';
+                const exRestStr = (ex.Rest || '').replace(/'/g, "\\'");
 
                 const targetObj = calculateWeightFromPct(ex);
                 const calculatedTarget = targetObj.val;
@@ -1306,7 +1341,7 @@
                     checksHtml += `
                         <div class="flex items-center space-x-1 bg-slate-950 px-2 py-1.5 rounded-xl border ${isPR ? 'border-amber-500/60 ring-1 ring-amber-500/30' : 'border-slate-800'} text-[10px]">
                             <span class="font-black ${isPR ? 'text-amber-400' : 'text-blue-400'}">S${s}</span>
-                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="onSetCheckChange('${checkKey}', this.checked, ${exIdx}, ${s}, '${ex.Series || ''}', '${ex.Exercise ? ex.Exercise.replace(/'/g, "\\'") : ''}')">
+                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="onSetCheckChange('${checkKey}', this.checked, ${exIdx}, ${s}, '${ex.Series || ''}', '${ex.Exercise ? ex.Exercise.replace(/'/g, "\\'") : ''}', '${exRestStr}')">
                             <input type="text" value="${savedWeight}" oninput="localStorage.setItem('${weightKey}', this.value); renderWorkout();" class="w-full bg-slate-900 border ${isPR ? 'border-amber-500/80 text-amber-300' : 'border-slate-700 text-blue-300'} rounded text-center font-bold focus:outline-none focus:border-blue-500 py-1 text-[10px]">
                             ${prBadge}
                         </div>
@@ -1836,39 +1871,55 @@
             link.click();
         }
 
-        // LOUD AUDIO ALERT FOR TIMER EXPIRATION
+        // ULTRA-LOUD HEADPHONE-OPTIMIZED TIMER AUDIO ALERT ENGINE
         function playLoudTimerBeep() {
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 if (!AudioCtx) return;
                 const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+                
                 const now = ctx.currentTime;
                 
-                const beeps = [
-                    { time: now, freq: 1046.50 },        // C6
-                    { time: now + 0.18, freq: 1318.51 }, // E6
-                    { time: now + 0.36, freq: 1567.98 }, // G6
-                    { time: now + 0.54, freq: 2093.00 }  // C7
+                // Create Master Volume Node capped at max full dynamic range
+                const masterGain = ctx.createGain();
+                masterGain.gain.setValueAtTime(1.0, now);
+                masterGain.connect(ctx.destination);
+
+                // High-frequency dual-oscillator bursts tailored for headphone audibility over music bass
+                const bursts = [
+                    { time: now, freqs: [1760, 2793.83] },       // A6 + F7 (High Chime Burst 1)
+                    { time: now + 0.18, freqs: [2093, 3135.96] },  // C7 + G7
+                    { time: now + 0.36, freqs: [2637.02, 3520] }, // E7 + A7
+                    { time: now + 0.65, freqs: [1760, 2793.83] }, // Burst 2 Repeat
+                    { time: now + 0.83, freqs: [2093, 3135.96] },
+                    { time: now + 1.01, freqs: [2637.02, 3520] },
+                    { time: now + 1.35, freqs: [3520, 4186.01] }  // A7 + C8 Peak High Frequency Cut-Through
                 ];
 
-                beeps.forEach(b => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'square'; // Loud piercing wave
-                    osc.frequency.setValueAtTime(b.freq, b.time);
-                    gain.gain.setValueAtTime(0.7, b.time);
-                    gain.gain.exponentialRampToValueAtTime(0.001, b.time + 0.15);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(b.time);
-                    osc.stop(b.time + 0.15);
+                bursts.forEach(b => {
+                    b.freqs.forEach(freq => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth'; // Sawtooth produces rich harmonic overtones that cut through background music
+                        osc.frequency.setValueAtTime(freq, b.time);
+                        gain.gain.setValueAtTime(0.85, b.time);
+                        gain.gain.exponentialRampToValueAtTime(0.001, b.time + 0.15);
+                        osc.connect(gain);
+                        gain.connect(masterGain);
+                        osc.start(b.time);
+                        osc.stop(b.time + 0.15);
+                    });
                 });
 
+                // Device Haptic Vibration Pulse Pattern
                 if (navigator.vibrate) {
-                    navigator.vibrate([200, 100, 200, 100, 300]);
+                    navigator.vibrate([400, 150, 400, 150, 600]);
                 }
             } catch (e) {
-                console.log('Audio playback error:', e);
+                console.log('Loud audio playback error:', e);
             }
         }
 
@@ -1876,7 +1927,16 @@
             stopRestTimer();
             timerSecondsRemaining = seconds;
             document.getElementById('timerIdleView').classList.add('hidden');
-            document.getElementById('timerActiveView').classList.remove('hidden');
+            
+            const activeView = document.getElementById('timerActiveView');
+            if (activeView) activeView.classList.remove('hidden');
+
+            // ADD NEON CYAN TIMER GLOW TO FLOATING BOTTOM WIDGET
+            const widget = document.getElementById('floatingTimerWidget');
+            if (widget) {
+                widget.classList.add('border-cyan-400', 'shadow-[0_-5px_30px_rgba(6,182,212,0.6)]', 'electric-glow');
+            }
+
             updateTimerDisplay();
 
             timerInterval = setInterval(() => {
@@ -1894,14 +1954,23 @@
             const mins = Math.floor(timerSecondsRemaining / 60);
             const secs = timerSecondsRemaining % 60;
             const str = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            document.getElementById('timerCountdownText').textContent = str;
+            const textEl = document.getElementById('timerCountdownText');
+            if (textEl) textEl.textContent = str;
         }
 
         function stopRestTimer() {
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
             document.getElementById('timerIdleView').classList.remove('hidden');
-            document.getElementById('timerActiveView').classList.add('hidden');
+            
+            const activeView = document.getElementById('timerActiveView');
+            if (activeView) activeView.classList.add('hidden');
+
+            // REMOVE NEON CYAN TIMER GLOW FROM FLOATING WIDGET
+            const widget = document.getElementById('floatingTimerWidget');
+            if (widget) {
+                widget.classList.remove('border-cyan-400', 'shadow-[0_-5px_30px_rgba(6,182,212,0.6)]', 'electric-glow');
+            }
         }
 
         function startLiveClock() {
@@ -2086,15 +2155,13 @@
             document.getElementById('warmupModal').classList.add('hidden');
         }
 
-        // AUTO-START REST TIMER & FATIGUE AUTO-ADJUST
-        function onSetCheckChange(checkKey, isChecked, exIdx, setNum, seriesStr, exNameStr) {
+        // AUTO-START REST TIMER WITH DYNAMIC EXERCISE REST PARSING & FATIGUE AUTO-ADJUST
+        function onSetCheckChange(checkKey, isChecked, exIdx, setNum, seriesStr, exNameStr, exRestStr) {
             localStorage.setItem(checkKey, isChecked);
 
             if (isChecked) {
-                let restSecs = 90;
-                if (seriesStr.includes('A')) restSecs = 120;
-                else if (seriesStr.includes('B')) restSecs = 90;
-                else if (seriesStr.includes('C') || seriesStr.includes('D')) restSecs = 60;
+                // PARSE EXACT EXERCISE REST REQUIREMENT
+                let restSecs = parseRestSeconds(exRestStr, seriesStr);
 
                 startRestTimer(restSecs);
                 checkFatigueAutoAdjust(exIdx, setNum);
