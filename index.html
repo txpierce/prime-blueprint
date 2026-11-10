@@ -525,7 +525,7 @@
 
             <div id="prHistorySummaryGrid" class="grid grid-cols-2 gap-2 text-xs">
                 <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center">
-                    <span class="text-[9px] text-slate-400 font-bold block uppercase">Total PR Sets Logged</span>
+                    <span class="text-[9px] text-slate-400 font-bold block uppercase">Unique PR Exercises</span>
                     <span id="prTotalCountDisplay" class="text-base font-black text-amber-400">0</span>
                 </div>
                 <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center">
@@ -535,7 +535,7 @@
             </div>
 
             <div class="space-y-2">
-                <h4 class="font-bold text-xs text-slate-200">Logged Strength Records:</h4>
+                <h4 class="font-bold text-xs text-slate-200">Logged Strength Records (Single Best PR Per Exercise):</h4>
                 <div id="prHistoryList" class="max-h-64 overflow-y-auto space-y-1.5 text-xs pr-1 no-scrollbar"></div>
             </div>
 
@@ -597,7 +597,7 @@
             <div id="igPreviewCard" class="bg-gradient-to-b from-slate-950 via-blue-950 to-slate-950 border-2 border-blue-500/40 rounded-2xl p-4 space-y-3 text-center shadow-2xl relative overflow-hidden">
                 <div class="flex items-center justify-between text-[10px] text-blue-400 font-black tracking-wider uppercase border-b border-blue-900/50 pb-2">
                     <span>⚡ PRIME BLUEPRINT OS</span>
-                    <span id="igDateText">NOV 08, 2026</span>
+                    <span id="igDateText">NOV 10, 2026</span>
                 </div>
                 <div class="py-1">
                     <span id="igClientName" class="text-lg font-black text-white tracking-wide block">ATHLETE</span>
@@ -682,6 +682,7 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             initPWAManifest();
+            checkMidnightReset();
             startLiveClock();
             checkOnboarding();
             loadProfileHeader();
@@ -698,6 +699,42 @@
             await fetchProgramFromGoogleSheet();
         });
 
+        // MIDNIGHT DAILY RESET ENGINE
+        function checkMidnightReset() {
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            const lastActiveDate = localStorage.getItem('tx_last_active_date');
+
+            if (lastActiveDate && lastActiveDate !== todayStr) {
+                // Clear daily check-in recovery inputs
+                localStorage.removeItem('tx_hydration');
+                localStorage.removeItem('tx_score_pump');
+                localStorage.removeItem('tx_score_joints');
+                localStorage.removeItem('tx_score_sleep');
+                localStorage.removeItem('tx_notes');
+
+                // Clear daily wearable stats
+                localStorage.removeItem('tx_wear_bb');
+                localStorage.removeItem('tx_wear_hrv');
+                localStorage.removeItem('tx_wear_sleep');
+                localStorage.removeItem('tx_wear_rhr');
+
+                // Reset form elements in DOM
+                if (document.getElementById('scorePump')) document.getElementById('scorePump').value = '-';
+                if (document.getElementById('scoreJoints')) document.getElementById('scoreJoints').value = '-';
+                if (document.getElementById('scoreSleep')) document.getElementById('scoreSleep').value = '-';
+                if (document.getElementById('sessionNotes')) document.getElementById('sessionNotes').value = '';
+
+                if (document.getElementById('wear_bodyBattery')) document.getElementById('wear_bodyBattery').value = '';
+                if (document.getElementById('wear_hrv')) document.getElementById('wear_hrv').value = '';
+                if (document.getElementById('wear_sleep')) document.getElementById('wear_sleep').value = '';
+                if (document.getElementById('wear_restingHr')) document.getElementById('wear_restingHr').value = '';
+
+                loadHydration();
+            }
+
+            localStorage.setItem('tx_last_active_date', todayStr);
+        }
+
         async function fetchProgramFromGoogleSheet() {
             const badge = document.getElementById('apiStatusBadge');
             try {
@@ -707,6 +744,7 @@
                     if (data && !data.status && Object.keys(data).length > 0) {
                         PROGRAM_DATA = data;
                         populatePhases();
+                        autoSelectActiveWorkout();
                         if (badge) {
                             badge.textContent = "LIVE SHEET SYNCED";
                             badge.className = "text-[9px] font-extrabold uppercase text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40";
@@ -727,6 +765,59 @@
                         <p class="text-[10px] text-slate-400 mt-1">Make sure you ran 'testSetup' in Google Apps Script and deployed as 'Anyone'.</p>
                     </div>
                 `;
+            }
+        }
+
+        // AUTO-SELECT CURRENT IN-PROGRESS OR NEXT UNCOMPLETED WORKOUT
+        function autoSelectActiveWorkout() {
+            if (!PROGRAM_DATA || Object.keys(PROGRAM_DATA).length === 0) return;
+
+            let foundActive = false;
+
+            for (let phase of Object.keys(PROGRAM_DATA)) {
+                for (let week of Object.keys(PROGRAM_DATA[phase])) {
+                    for (let day of Object.keys(PROGRAM_DATA[phase][week])) {
+                        const exercises = PROGRAM_DATA[phase][week][day] || [];
+                        let totalSets = 0;
+                        let checkedSets = 0;
+
+                        exercises.forEach((ex, exIdx) => {
+                            const numSets = parseInt(ex.Sets) || 1;
+                            for (let s = 1; s <= numSets; s++) {
+                                totalSets++;
+                                const checkKey = `${phase}_${week}_${day}_${exIdx}_s${s}`;
+                                if (localStorage.getItem(checkKey) === 'true') {
+                                    checkedSets++;
+                                }
+                            }
+                        });
+
+                        // If workout day is not 100% finished, select it as active!
+                        if (totalSets > 0 && checkedSets < totalSets) {
+                            currentPhase = phase;
+                            currentWeek = week;
+                            currentDay = day;
+
+                            const pSel = document.getElementById('phaseSelect');
+                            if (pSel) { pSel.value = phase; onPhaseChange(); }
+                            const wSel = document.getElementById('weekSelect');
+                            if (wSel) { wSel.value = week; onWeekChange(); }
+                            const dSel = document.getElementById('daySelect');
+                            if (dSel) { dSel.value = day; }
+
+                            renderWorkout();
+                            foundActive = true;
+                            break;
+                        }
+                    }
+                    if (foundActive) break;
+                }
+                if (foundActive) break;
+            }
+
+            if (!foundActive) {
+                // If all workouts finished, render current selectors
+                renderWorkout();
             }
         }
 
@@ -874,6 +965,7 @@
             return `${h12}:${mStr} ${ampm}`;
         }
 
+        // NUTRITION FUELING TIMING OS: MEAL #4 LUNCH IS 4 HOURS AFTER MEAL #3 POST-WORKOUT
         function getMealSchedule() {
             const wakeInput = document.getElementById('nutr_wakeTime')?.value;
             const liftInput = document.getElementById('nutr_liftTime')?.value;
@@ -888,8 +980,8 @@
                 { id: 1, title: '1. Wake-Up & Hydration Anchor', time: addMinutesToTime(wakeTime, 0), desc: 'Immediate 16-24 oz water + electrolytes & morning biohack compounds upon waking.' },
                 { id: 2, title: '2. Pre-Workout Fuel (15m Pre-Lift)', time: addMinutesToTime(liftTime, -15), desc: 'Fast-acting carbs & amino acids 15 minutes prior to lifting.' },
                 { id: 3, title: '3. Post-Workout Anabolic Meal (30m Post-Lift)', time: addMinutesToTime(liftTime, 30), desc: 'Lean protein + high-GI carbs 30 minutes post-workout for muscle repair.' },
-                { id: 4, title: '4. Lunch (3.5h Post-Workout)', time: addMinutesToTime(liftTime, 210), desc: 'Sustained complex carbs + lean protein + micronutrient greens 3.5 hours post-workout.' },
-                { id: 5, title: '5. Afternoon Snack (3.5h Post-Lunch)', time: addMinutesToTime(liftTime, 420), desc: 'Protein snack + healthy fats 3.5 hours after lunch to maintain nitrogen balance.' },
+                { id: 4, title: '4. Lunch (4h Post-Workout Meal)', time: addMinutesToTime(liftTime, 270), desc: 'Sustained complex carbs + lean protein + micronutrient greens 4 hours after post-workout meal.' },
+                { id: 5, title: '5. Afternoon Snack (3.5h Post-Lunch)', time: addMinutesToTime(liftTime, 480), desc: 'Protein snack + healthy fats 3.5 hours after lunch to maintain nitrogen balance.' },
                 { id: 6, title: '6. Dinner (3h Before Bed)', time: addMinutesToTime(bedTime, -180), desc: 'Whole food protein + vegetables + healthy fats 3 hours before sleep.' }
             ];
         }
@@ -1157,7 +1249,6 @@
             return str;
         }
 
-        // DYNAMIC PARSER FOR EXACT EXERCISE REST TIME IN SECONDS
         function parseRestSeconds(restStr, seriesStr) {
             if (!restStr || restStr === 'undefined' || restStr === 'null') return defaultSeriesRest(seriesStr);
             let s = String(restStr).toLowerCase().trim();
@@ -1908,7 +1999,7 @@
                 });
 
                 if (navigator.vibrate) {
-                    navigator.vibrate([200, 100, 200, 100, 300]);
+                    navigator.vibrate([200, 100, 200, 100, 400]);
                 }
             } catch (e) {
                 console.log('Loud audio playback error:', e);
@@ -1965,9 +2056,14 @@
 
         function startLiveClock() {
             setInterval(() => {
+                checkMidnightReset();
                 const el = document.getElementById('liveDateTime');
                 if (el) el.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            }, 1000);
+            }, 60000);
+
+            // Initial call
+            const el = document.getElementById('liveDateTime');
+            if (el) el.textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
 
         function switchTab(id) {
@@ -1981,6 +2077,10 @@
             if (btn) {
                 btn.classList.remove('bg-slate-900', 'text-slate-400');
                 btn.classList.add('bg-blue-600', 'text-white', 'electric-glow');
+            }
+
+            if (id === 'workouts') {
+                autoSelectActiveWorkout();
             }
         }
 
@@ -2029,7 +2129,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files[0];
+            const file = event.target.files;
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -2191,10 +2291,11 @@
             document.getElementById('prHistoryModal').classList.add('hidden');
         }
 
+        // ALL-TIME PR HISTORY & VOLUME LOG ENGINE: DEDUPLICATE BY EXERCISE NAME (SINGLE BEST PR PER EXERCISE)
         function renderPrHistoryList() {
             let totalPrCount = 0;
             let totalTonnage = 0;
-            const prItems = [];
+            const bestPrMap = {};
 
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -2206,7 +2307,7 @@
                         const week = parts[1] || 'Week';
                         const day = parts[2] || 'Day';
                         const exIdx = parseInt(parts[3]) || 0;
-                        const setNum = parts[4]?.replace('wt', '')?.replace('s', '') || '1';
+                        const setNum = parts[4] ? parts[4].replace('wt', '').replace('s', '') : '1';
 
                         const exObj = PROGRAM_DATA[phase]?.[week]?.[day]?.[exIdx];
                         if (exObj) {
@@ -2219,25 +2320,33 @@
                             if (!isNaN(targetVal) && wtVal > targetVal && typeof targetObj.val === 'number') {
                                 totalPrCount++;
                                 const est1RM = Math.round(wtVal * (1 + reps / 30.0));
-                                prItems.push({
-                                    exercise: exObj.Exercise,
-                                    phase: phase,
-                                    week: week,
-                                    day: day,
-                                    wt: wtVal,
-                                    target: targetVal,
-                                    reps: reps,
-                                    est1RM: est1RM,
-                                    setNum: setNum
-                                });
+                                const exName = (exObj.Exercise || 'Exercise').trim();
+
+                                if (!bestPrMap[exName] || wtVal > bestPrMap[exName].wt || (wtVal === bestPrMap[exName].wt && est1RM > bestPrMap[exName].est1RM)) {
+                                    bestPrMap[exName] = {
+                                        exercise: exName,
+                                        series: exObj.Series || 'Ex',
+                                        phase: phase,
+                                        week: week,
+                                        day: day,
+                                        wt: wtVal,
+                                        target: targetVal,
+                                        reps: reps,
+                                        est1RM: est1RM,
+                                        setNum: setNum
+                                    };
+                                }
                             }
                         }
                     }
                 }
             }
 
+            const prItems = Object.values(bestPrMap);
+            prItems.sort((a, b) => b.wt - a.wt);
+
             const countEl = document.getElementById('prTotalCountDisplay');
-            if (countEl) countEl.textContent = totalPrCount;
+            if (countEl) countEl.textContent = prItems.length;
 
             const tonEl = document.getElementById('prTotalTonnageDisplay');
             if (tonEl) tonEl.textContent = `${totalTonnage.toLocaleString()} lbs`;
@@ -2254,10 +2363,16 @@
                 `;
             } else {
                 prItems.forEach(item => {
+                    const isASeries = item.series && String(item.series).toUpperCase().startsWith('A');
+                    const seriesTag = isASeries ? '<span class="text-[8px] font-black text-amber-400 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-500/50 ml-1">A-SERIES MAX ⚡</span>' : '';
+
                     listEl.innerHTML += `
                         <div class="bg-slate-950 p-2.5 rounded-xl border border-amber-500/40 flex items-center justify-between">
                             <div>
-                                <span class="font-black text-amber-400 block text-[11px]">${item.exercise}</span>
+                                <div class="flex items-center">
+                                    <span class="font-black text-amber-400 block text-[11px]">${item.exercise}</span>
+                                    ${seriesTag}
+                                </div>
                                 <span class="text-[10px] text-slate-400 font-bold">${item.phase} • ${item.week} • Set ${item.setNum}</span>
                             </div>
                             <div class="text-right">
