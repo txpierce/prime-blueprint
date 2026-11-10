@@ -738,6 +738,7 @@
         async function fetchProgramFromGoogleSheet() {
             const badge = document.getElementById('apiStatusBadge');
             try {
+                // Cache-busting parameter guarantees fresh sheet data on every load
                 const cacheBusterUrl = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
                 const res = await fetch(cacheBusterUrl);
                 if (res.ok) {
@@ -751,6 +752,8 @@
                             badge.className = "text-[9px] font-extrabold uppercase text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40";
                         }
                         return;
+                    } else if (data && data.status === 'error') {
+                        throw new Error(data.message || "Backend returned sheet read error");
                     }
                 }
                 throw new Error("Invalid payload from Google Sheets script");
@@ -761,15 +764,15 @@
                     badge.className = "text-[9px] font-extrabold uppercase text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40";
                 }
                 document.getElementById('workoutContainer').innerHTML = `
-                    <div class="bg-red-950/50 border border-red-800/60 rounded-2xl p-4 text-center text-xs text-red-300">
+                    <div class="bg-red-950/50 border border-red-800/60 rounded-2xl p-4 text-center text-xs text-red-300 space-y-1">
                         <p class="font-bold">⚠️ Could not load workouts from Google Sheets backend.</p>
-                        <p class="text-[10px] text-slate-400 mt-1">Make sure you ran 'testSetup' in Google Apps Script and deployed as 'Anyone'.</p>
+                        <p class="text-[10px] text-amber-400 font-semibold">Details: ${err.message}</p>
+                        <p class="text-[10px] text-slate-400">Verify your sheet tab name is exact: <strong>Ultimate_Lift_Program</strong> and columns A (Phase), B (Week), C (Day) are populated.</p>
                     </div>
                 `;
             }
         }
 
-        // AUTO-SELECT CURRENT IN-PROGRESS OR NEXT UNCOMPLETED WORKOUT
         function autoSelectActiveWorkout() {
             if (!PROGRAM_DATA || Object.keys(PROGRAM_DATA).length === 0) return;
 
