@@ -816,6 +816,7 @@
             }
 
             if (!foundActive) {
+                // If all workouts finished, render current selectors
                 renderWorkout();
             }
         }
@@ -891,6 +892,7 @@
             }).catch(e => console.log('Profile sync queued...'));
         }
 
+        // 1-TAP RECALCULATE ALL SETS TO DEFAULT % ENGINE
         function recalculateAllSetsToDefaultPct() {
             if (!confirm("Are you sure you want to reset all logged set weights back to the default 1RM percentage targets?")) return;
             let count = 0;
@@ -1955,7 +1957,7 @@
             link.click();
         }
 
-        // LOUD, NON-PIERCING DIGITAL ALARM SOUND (MID-FREQUENCY DUAL-TONE SPORT BEEP)
+        // ULTRA-LOUD HEADPHONE-OPTIMIZED TIMER AUDIO ALERT ENGINE
         function playLoudTimerBeep() {
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1968,46 +1970,39 @@
                 const now = ctx.currentTime;
                 
                 const masterGain = ctx.createGain();
-                masterGain.gain.setValueAtTime(0.7, now);
+                masterGain.gain.setValueAtTime(1.0, now);
                 masterGain.connect(ctx.destination);
 
-                // Classic digital timer alarm pattern: 3 double-beeps + 1 final long beep
-                // Frequencies set to 750 Hz, 850 Hz & 950 Hz for punchy mid-range sound
-                const pulseTimes = [
-                    now,        now + 0.12,   // Pair 1
-                    now + 0.40, now + 0.52,   // Pair 2
-                    now + 0.80, now + 0.92,   // Pair 3
-                    now + 1.20                // Final Long Beep
+                const bursts = [
+                    { time: now, freqs: [1760, 2793.83] },
+                    { time: now + 0.18, freqs: [2093, 3135.96] },
+                    { time: now + 0.36, freqs: [2637.02, 3520] },
+                    { time: now + 0.65, freqs: [1760, 2793.83] },
+                    { time: now + 0.83, freqs: [2093, 3135.96] },
+                    { time: now + 1.01, freqs: [2637.02, 3520] },
+                    { time: now + 1.35, freqs: [3520, 4186.01] }
                 ];
 
-                pulseTimes.forEach((t, idx) => {
-                    const isFinal = idx === pulseTimes.length - 1;
-                    const duration = isFinal ? 0.30 : 0.09;
-                    const freq = isFinal ? 950 : (idx % 2 === 0 ? 750 : 850);
-
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(freq, t);
-
-                    // Smooth 10ms attack ramp to eliminate clicks while keeping maximum punch
-                    gain.gain.setValueAtTime(0, t);
-                    gain.gain.linearRampToValueAtTime(0.65, t + 0.01);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-
-                    osc.connect(gain);
-                    gain.connect(masterGain);
-
-                    osc.start(t);
-                    osc.stop(t + duration);
+                bursts.forEach(b => {
+                    b.freqs.forEach(freq => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, b.time);
+                        gain.gain.setValueAtTime(0.85, b.time);
+                        gain.gain.exponentialRampToValueAtTime(0.001, b.time + 0.15);
+                        osc.connect(gain);
+                        gain.connect(masterGain);
+                        osc.start(b.time);
+                        osc.stop(b.time + 0.15);
+                    });
                 });
 
                 if (navigator.vibrate) {
-                    navigator.vibrate();
+                    navigator.vibrate([200, 100, 200, 100, 400]);
                 }
             } catch (e) {
-                console.log('Audio playback error:', e);
+                console.log('Loud audio playback error:', e);
             }
         }
 
@@ -2134,7 +2129,7 @@
         function triggerRestoreJSON() { document.getElementById('jsonFileInput').click(); }
 
         function restoreBackupJSON(event) {
-            const file = event.target.files[0];
+            const file = event.target.files;
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
