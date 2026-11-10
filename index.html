@@ -738,7 +738,8 @@
         async function fetchProgramFromGoogleSheet() {
             const badge = document.getElementById('apiStatusBadge');
             try {
-                const res = await fetch(GOOGLE_SCRIPT_URL);
+                const cacheBusterUrl = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+                const res = await fetch(cacheBusterUrl);
                 if (res.ok) {
                     const data = await res.json();
                     if (data && !data.status && Object.keys(data).length > 0) {
