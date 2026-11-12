@@ -250,7 +250,7 @@
             <div class="pt-1">
                 <button onclick="saveAllDailyEntries()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs py-3.5 px-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-1.5 electric-glow">
                     <span>💾</span>
-                    <span>Save Daily Wellness & Biohack Metrics</span>
+                    <span>Save Daily Entry & Sync to Per-Client Sheet</span>
                 </button>
                 <div id="saveNotification" class="text-center text-[10px] text-blue-400 font-bold mt-1.5 h-4"></div>
             </div>
@@ -300,15 +300,6 @@
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-2">
                 <h3 class="font-bold text-slate-100 text-xs tracking-wide flex items-center gap-2"><span class="text-blue-500">📝</span> Session Review Notes</h3>
                 <textarea id="sessionNotes" oninput="saveNotes()" rows="2" placeholder="Log joint feedback, pump quality, fatigue, progression notes..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"></textarea>
-            </div>
-
-            <!-- SAVE WORKOUT SESSION BUTTON -->
-            <div class="pt-1">
-                <button onclick="saveWorkoutSession()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs py-3.5 px-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-1.5 electric-glow">
-                    <span>🏋️</span>
-                    <span>Save Workout Session & Sync to Per-Client Sheet</span>
-                </button>
-                <div id="workoutSaveNotification" class="text-center text-[10px] text-cyan-400 font-bold mt-1.5 h-4"></div>
             </div>
         </div>
 
@@ -1001,6 +992,27 @@
             const profile = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
             const currentWeight = parseFloat(document.getElementById('dash_bodyWeight')?.value) || profile.weight || 190;
 
+            const setLogs = [];
+            const exercises = PROGRAM_DATA[currentPhase]?.[currentWeek]?.[currentDay] || [];
+            exercises.forEach((ex, exIdx) => {
+                const sets = parseInt(ex.Sets) || 1;
+                for (let s = 1; s <= sets; s++) {
+                    const checkKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_s${s}`;
+                    const weightKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_wt_s${s}`;
+                    const checked = localStorage.getItem(checkKey) === 'true';
+                    const actualWt = localStorage.getItem(weightKey) || ex.Wt || 'BW';
+
+                    setLogs.push({
+                        exercise: ex.Exercise,
+                        series: ex.Series,
+                        setNum: s,
+                        targetWt: ex.Wt || 'BW',
+                        actualWt: actualWt,
+                        completed: checked
+                    });
+                }
+            });
+
             const peptides = getPeptides();
             const peptidesDone = peptides.map(p => {
                 const checked = localStorage.getItem(`pep_done_${todayStr}_${p.id}`) === 'true';
@@ -1044,7 +1056,7 @@
                 bedTime: document.getElementById('nutr_bedTime')?.value || profile.bedTime || '22:00',
                 peptidesDone: peptidesDone,
                 streak: Object.keys(historyLog).length,
-                setLogs: []
+                setLogs: setLogs
             };
 
             fetch(GOOGLE_SCRIPT_URL, {
@@ -1056,69 +1068,10 @@
 
             const notif = document.getElementById('saveNotification');
             if (notif) {
-                notif.textContent = `Daily Wellness & Biohack Metrics Synced to Google Sheets!`;
+                notif.textContent = `Daily Entry & Wearable Metrics Synced to Google Sheets!`;
                 setTimeout(() => notif.textContent = '', 3000);
             }
         }
-
-        function saveWorkoutSession() {
-            const todayStr = new Date().toLocaleDateString('en-CA');
-            const profile = JSON.parse(localStorage.getItem('prime_client_profile')) || {};
-            const currentWeight = parseFloat(document.getElementById('dash_bodyWeight')?.value) || profile.weight || 190;
-
-            const setLogs = [];
-            const exercises = PROGRAM_DATA[currentPhase]?.[currentWeek]?.[currentDay] || [];
-            exercises.forEach((ex, exIdx) => {
-                const sets = parseInt(ex.Sets) || 1;
-                for (let s = 1; s <= sets; s++) {
-                    const checkKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_s${s}`;
-                    const weightKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_wt_s${s}`;
-                    const checked = localStorage.getItem(checkKey) === 'true';
-                    const actualWt = localStorage.getItem(weightKey) || ex.Wt || 'BW';
-
-                    setLogs.push({
-                        exercise: ex.Exercise,
-                        series: ex.Series,
-                        setNum: s,
-                        targetWt: ex.Wt || 'BW',
-                        actualWt: actualWt,
-                        completed: checked
-                    });
-                }
-            });
-
-            if (setLogs.length === 0) {
-                alert('No exercise sets found for the selected workout.');
-                return;
-            }
-
-            const workoutEntry = {
-                type: 'WORKOUT_LOG',
-                date: todayStr,
-                clientName: profile.clientName || 'Client',
-                email: profile.email || 'Client',
-                bodyWeight: currentWeight,
-                waterPercentage: parseInt(localStorage.getItem('tx_hydration')) || 0,
-                phase: currentPhase || '',
-                week: currentWeek || '',
-                day: currentDay || '',
-                sessionNotes: document.getElementById('sessionNotes')?.value || '',
-                setLogs: setLogs
-            };
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(workoutEntry)
-            }).catch(e => console.log('Workout log sync queued...'));
-
-            const notif = document.getElementById('workoutSaveNotification');
-            if (notif) {
-                notif.textContent = `Workout Session Logged & Synced to Sheet!`;
-                setTimeout(() => notif.textContent = '', 3000);
-            }
-        }        }
 
         function updateStreakDisplay() {
             const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
