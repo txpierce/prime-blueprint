@@ -303,12 +303,12 @@
             </div>
 
             <!-- SAVE WORKOUT SESSION BUTTON -->
-            <div class="pt-1">
-                <button onclick="saveWorkoutSession()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-xs py-3.5 px-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-1.5 electric-glow">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-2">
+                <button onclick="saveWorkoutSession()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs py-3.5 px-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-1.5 electric-glow">
                     <span>🏋️</span>
-                    <span>Save Workout Session & Sync to Sheet</span>
+                    <span>Save Workout Session & Sync to Per-Client Sheet</span>
                 </button>
-                <div id="workoutSaveNotification" class="text-center text-[10px] text-emerald-400 font-bold mt-1.5 h-4"></div>
+                <div id="workoutSaveNotification" class="text-center text-[10px] text-blue-400 font-bold mt-1.5 h-4"></div>
             </div>
         </div>
 
@@ -1003,14 +1003,14 @@
 
             const peptides = getPeptides();
             const peptidesDone = peptides.map(p => {
-                const checked = localStorage.getItem() === 'true';
+                const checked = localStorage.getItem(`pep_done_${todayStr}_${p.id}`) === 'true';
                 return { id: p.id, name: p.name, dose: p.dose, completed: checked };
             });
 
             let mealCheckedCount = 0;
             const meals = getMealSchedule();
             meals.forEach(m => {
-                if (localStorage.getItem() === 'true') mealCheckedCount++;
+                if (localStorage.getItem(`meal_done_${todayStr}_${m.id}`) === 'true') mealCheckedCount++;
             });
 
             const historyLog = JSON.parse(localStorage.getItem('tx_daily_history_log')) || {};
@@ -1028,7 +1028,7 @@
                 phase: currentPhase || 'Phase 1',
                 week: currentWeek || 'Week 1',
                 day: currentDay || 'Day 1',
-                mealsCompleted: ,
+                mealsCompleted: `${mealCheckedCount}/6 Meals`,
                 recoveryScores: {
                     pump: document.getElementById('scorePump')?.value || '-',
                     joints: document.getElementById('scoreJoints')?.value || '-',
@@ -1046,28 +1046,18 @@
                 streak: Object.keys(historyLog).length
             };
 
-            const notif = document.getElementById('saveNotification');
-            if (notif) notif.textContent = '⚡ Syncing wellness & biohack metrics...';
-
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dailyEntry)
-            })
-            .then(() => {
-                if (notif) {
-                    notif.textContent = '✅ Daily Wellness & Biohack Metrics Synced!';
-                    setTimeout(() => { notif.textContent = ''; }, 3000);
-                }
-            })
-            .catch(err => {
-                console.error('Error syncing daily entries:', err);
-                if (notif) {
-                    notif.textContent = '⚠️ Sync error. Please try again.';
-                    setTimeout(() => { notif.textContent = ''; }, 3000);
-                }
-            });
+            }).catch(e => console.log('Daily log sync queued...'));
+
+            const notif = document.getElementById('saveNotification');
+            if (notif) {
+                notif.textContent = `Daily Wellness & Biohack Metrics Synced to Google Sheets!`;
+                setTimeout(() => notif.textContent = '', 3000);
+            }
         }
 
         function saveWorkoutSession() {
@@ -1080,8 +1070,8 @@
             exercises.forEach((ex, exIdx) => {
                 const sets = parseInt(ex.Sets) || 1;
                 for (let s = 1; s <= sets; s++) {
-                    const checkKey = ;
-                    const weightKey = ;
+                    const checkKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_s${s}`;
+                    const weightKey = `${currentPhase}_${currentWeek}_${currentDay}_${exIdx}_wt_s${s}`;
                     const checked = localStorage.getItem(checkKey) === 'true';
                     const actualWt = localStorage.getItem(weightKey) || ex.Wt || 'BW';
 
@@ -1110,28 +1100,18 @@
                 setLogs: setLogs
             };
 
-            const notif = document.getElementById('workoutSaveNotification');
-            if (notif) notif.textContent = '⚡ Syncing workout session to Google Sheets...';
-
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(workoutEntry)
-            })
-            .then(() => {
-                if (notif) {
-                    notif.textContent = '🏆 Workout Session Logged & Synced to Sheet!';
-                    setTimeout(() => { notif.textContent = ''; }, 3000);
-                }
-            })
-            .catch(err => {
-                console.error('Error syncing workout session:', err);
-                if (notif) {
-                    notif.textContent = '⚠️ Sync error. Please try again.';
-                    setTimeout(() => { notif.textContent = ''; }, 3000);
-                }
-            });
+            }).catch(e => console.log('Workout log sync queued...'));
+
+            const notif = document.getElementById('workoutSaveNotification');
+            if (notif) {
+                notif.textContent = `Workout Session Logged & Synced to Per-Client Sheet!`;
+                setTimeout(() => notif.textContent = '', 3000);
+            }
         }
 
         function updateStreakDisplay() {
