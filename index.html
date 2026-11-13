@@ -1483,7 +1483,7 @@
                             <span class="text-[10px] font-extrabold text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">${ex.Series || 'Ex'}</span>
                             <span class="text-[11px] text-slate-400 font-semibold">Target Wt: <strong class="text-cyan-400 font-bold">${displayTargetLabel}</strong>${wuButtonHtml}</span>
                         </div>
-                        <h4 class="font-bold text-slate-100 text-xs">${ex.Exercise || 'Exercise'}</h4>
+                       <h4> <a href="[suspicious link removed]{encodeURIComponent(ex.Exercise || '')}" rel="noopener noreferrer"> <span>${ex.Exercise || 'Exercise'}</span> <span>↗</span> </a> </h4>
                         <div class="flex flex-wrap justify-between items-center text-[11px] text-slate-400 gap-y-1">
                             <span>Sets: <strong class="text-slate-200">${ex.Sets || '-'}</strong> | Reps: <strong class="text-cyan-400 font-bold">${cleanReps}</strong> | Tempo: <strong class="text-amber-400 font-bold">${cleanTempo}</strong></span>
                             <span>Rest: <strong class="text-slate-200">${ex.Rest || '-'}</strong> | RPE: <strong class="text-cyan-400 font-bold">${cleanRpe}</strong></span>
