@@ -1236,16 +1236,19 @@
             }
         }
 
-        function populatePhases() {
-            const sel = document.getElementById('phaseSelect');
+      function onPhaseChange() {
+            currentPhase = document.getElementById('phaseSelect').value;
+            const sel = document.getElementById('weekSelect');
             if (!sel) return;
             sel.innerHTML = '';
-            Object.keys(PROGRAM_DATA).forEach(p => {
-                let opt = document.createElement('option');
-                opt.value = p; opt.textContent = p;
-                sel.appendChild(opt);
-            });
-            onPhaseChange();
+            if (PROGRAM_DATA[currentPhase]) {
+                Object.keys(PROGRAM_DATA[currentPhase]).forEach(w => {
+                    let opt = document.createElement('option');
+                    opt.value = w; opt.textContent = w;
+                    sel.appendChild(opt);
+                });
+            }
+            onWeekChange();
         }
 
          function populatePhases() {
