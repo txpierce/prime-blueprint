@@ -1248,12 +1248,11 @@
             onPhaseChange();
         }
 
-       function populatePhases() {
+         function populatePhases() {
             const sel = document.getElementById('phaseSelect');
             if (!sel) return;
             sel.innerHTML = '';
-            const sortedPhases = Object.keys(PROGRAM_DATA).sort((a, b) => a.localeCompare(b));
-            sortedPhases.forEach(p => {
+            Object.keys(PROGRAM_DATA).forEach(p => {
                 let opt = document.createElement('option');
                 opt.value = p; opt.textContent = p;
                 sel.appendChild(opt);
