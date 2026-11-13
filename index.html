@@ -778,11 +778,11 @@
         }
 
         // AUTO-SELECT CURRENT IN-PROGRESS OR NEXT UNCOMPLETED WORKOUT
-        function autoSelectActiveWorkout() {
+         function autoSelectActiveWorkout() {
             if (!PROGRAM_DATA || Object.keys(PROGRAM_DATA).length === 0) return;
 
-            let foundActive = false;
-
+            // Flatten all workout days across the program in sequential order
+            const allDays = [];
             for (let phase of Object.keys(PROGRAM_DATA)) {
                 for (let week of Object.keys(PROGRAM_DATA[phase])) {
                     for (let day of Object.keys(PROGRAM_DATA[phase][week])) {
@@ -801,33 +801,60 @@
                             }
                         });
 
-                        // If workout day is not 100% finished, select it as active!
-                        if (totalSets > 0 && checkedSets < totalSets) {
-                            currentPhase = phase;
-                            currentWeek = week;
-                            currentDay = day;
+                        const isCompleted = totalSets > 0 && checkedSets === totalSets;
+                        const isInProgress = totalSets > 0 && checkedSets > 0 && checkedSets < totalSets;
 
-                            const pSel = document.getElementById('phaseSelect');
-                            if (pSel) { pSel.value = phase; onPhaseChange(); }
-                            const wSel = document.getElementById('weekSelect');
-                            if (wSel) { wSel.value = week; onWeekChange(); }
-                            const dSel = document.getElementById('daySelect');
-                            if (dSel) { dSel.value = day; }
-
-                            renderWorkout();
-                            foundActive = true;
-                            break;
-                        }
+                        allDays.push({
+                            phase, week, day,
+                            totalSets, checkedSets,
+                            isCompleted, isInProgress
+                        });
                     }
-                    if (foundActive) break;
                 }
-                if (foundActive) break;
             }
 
-            if (!foundActive) {
-                // If all workouts finished, render current selectors
-                renderWorkout();
+            if (allDays.length === 0) return;
+
+            let targetIndex = 0;
+
+            // 1. If a workout day is currently in progress, open right to it
+            const inProgressIdx = allDays.findIndex(d => d.isInProgress);
+
+            if (inProgressIdx !== -1) {
+                targetIndex = inProgressIdx;
+            } else {
+                // 2. Find the LAST completed workout day across the program
+                let lastCompletedIdx = -1;
+                for (let i = allDays.length - 1; i >= 0; i--) {
+                    if (allDays[i].isCompleted) {
+                        lastCompletedIdx = i;
+                        break;
+                    }
+                }
+
+                if (lastCompletedIdx !== -1) {
+                    // Move to the NEXT day (automatically rolls over to next week or next phase if week/phase ends)
+                    if (lastCompletedIdx + 1 < allDays.length) {
+                        targetIndex = lastCompletedIdx + 1;
+                    } else {
+                        targetIndex = lastCompletedIdx;
+                    }
+                }
             }
+
+            const target = allDays[targetIndex];
+            currentPhase = target.phase;
+            currentWeek = target.week;
+            currentDay = target.day;
+
+            const pSel = document.getElementById('phaseSelect');
+            if (pSel) { pSel.value = target.phase; onPhaseChange(); }
+            const wSel = document.getElementById('weekSelect');
+            if (wSel) { wSel.value = target.week; onWeekChange(); }
+            const dSel = document.getElementById('daySelect');
+            if (dSel) { dSel.value = target.day; }
+
+            renderWorkout();
         }
 
         function checkOnboarding() {
