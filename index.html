@@ -1248,19 +1248,19 @@
             onPhaseChange();
         }
 
-        function onPhaseChange() {
-            currentPhase = document.getElementById('phaseSelect').value;
-            const sel = document.getElementById('weekSelect');
+       function populatePhases() {
+            const sel = document.getElementById('phaseSelect');
             if (!sel) return;
             sel.innerHTML = '';
-            if (PROGRAM_DATA[currentPhase]) {
-                Object.keys(PROGRAM_DATA[currentPhase]).forEach(w => {
-                    let opt = document.createElement('option');
-                    opt.value = w; opt.textContent = w;
-                    sel.appendChild(opt);
-                });
-            }
-            onWeekChange();
+            const sortedPhases = Object.keys(PROGRAM_DATA).sort((a, b) => a.localeCompare(b));
+            sortedPhases.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p; opt.textContent = p;
+                sel.appendChild(opt);
+            });
+            onPhaseChange();
+        }
+
         }
 
         function onWeekChange() {
