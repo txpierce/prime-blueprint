@@ -1255,7 +1255,8 @@
             const sel = document.getElementById('phaseSelect');
             if (!sel) return;
             sel.innerHTML = '';
-            Object.keys(PROGRAM_DATA).forEach(p => {
+            const sortedPhases = Object.keys(PROGRAM_DATA).sort((a, b) => a.localeCompare(b));
+            sortedPhases.forEach(p => {
                 let opt = document.createElement('option');
                 opt.value = p; opt.textContent = p;
                 sel.appendChild(opt);
