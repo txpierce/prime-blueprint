@@ -1431,117 +1431,96 @@
             return { val: wtStr || 'BW', tag: loadTag };
         }
 
-        function getPhaseMaxWeight(phase, exIdx, setNum, ex) {
-    const res = calculateWeightFromPct(ex);
-    const currCalc = (typeof res.val === 'number' && !isNaN(res.val)) ? res.val : 0;
+           function getPhaseMaxWeight(phase, exIdx, setNum, ex) {
+            const res = calculateWeightFromPct(ex);
 
-    if (!PROGRAM_DATA || !PROGRAM_DATA[phase]) return res.val;
+            if (!PROGRAM_DATA || !PROGRAM_DATA[phase]) return res.val;
 
-    // Read current week and day directly from app state
-    const week = currentWeek || Object.keys(PROGRAM_DATA[phase])[0];
-    const day = currentDay || (PROGRAM_DATA[phase][week] ? Object.keys(PROGRAM_DATA[phase][week])[0] : '');
+            const week = currentWeek || Object.keys(PROGRAM_DATA[phase])[0];
+            const day = currentDay || (PROGRAM_DATA[phase][week] ? Object.keys(PROGRAM_DATA[phase][week])[0] : '');
 
-    const weeks = Object.keys(PROGRAM_DATA[phase]);
-    if (!weeks.includes(week)) return res.val;
-    const currentWeekIdx = weeks.indexOf(week);
+            const weeks = Object.keys(PROGRAM_DATA[phase]);
+            if (!weeks.includes(week)) return res.val;
+            const currentWeekIdx = weeks.indexOf(week);
 
-    let prevLogged = 0;
+            let userLiftedWeight = null;
 
-    // 1. Search previous weeks in current phase for this specific day & set
-    if (currentWeekIdx > 0) {
-        for (let w = currentWeekIdx - 1; w >= 0; w--) {
-            const pWeek = weeks[w];
-
-            // A. Exact localStorage match for this set
-            const keyExact = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${setNum}`;
-            const valExact = parseFloat(localStorage.getItem(keyExact));
-            if (!isNaN(valExact) && valExact > 0) {
-                prevLogged = valExact;
-                break;
-            }
-
-            // B. Fallback to earlier sets of this exercise in that previous week
-            for (let s = setNum - 1; s >= 1; s--) {
-                const keyEarlier = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${s}`;
-                const valEarlier = parseFloat(localStorage.getItem(keyEarlier));
-                if (!isNaN(valEarlier) && valEarlier > 0) {
-                    prevLogged = valEarlier;
-                    break;
+            function getValidUserWeight(key) {
+                const val = localStorage.getItem(key);
+                if (val !== null && val !== undefined && val !== '' && val !== 'undefined' && val !== 'null') {
+                    return val;
                 }
+                return null;
             }
-            if (prevLogged > 0) break;
 
-            // C. Match by exercise name if position index changed
-            const pExercises = PROGRAM_DATA[phase]?.[pWeek]?.[day] || [];
-            for (let pIdx = 0; pIdx < pExercises.length; pIdx++) {
-                if (pExercises[pIdx].Exercise === ex.Exercise) {
-                    for (let s = setNum; s >= 1; s--) {
-                        const keyEx = `${phase}_${pWeek}_${day}_${pIdx}_wt_s${s}`;
-                        const valEx = parseFloat(localStorage.getItem(keyEx));
-                        if (!isNaN(valEx) && valEx > 0) {
-                            prevLogged = valEx;
-                            break;
-                        }
+            if (currentWeekIdx > 0) {
+                for (let w = currentWeekIdx - 1; w >= 0; w--) {
+                    const pWeek = weeks[w];
+
+                    const keyExact = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${setNum}`;
+                    userLiftedWeight = getValidUserWeight(keyExact);
+                    if (userLiftedWeight !== null) break;
+
+                    for (let s = setNum - 1; s >= 1; s--) {
+                        const keyEarlier = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${s}`;
+                        userLiftedWeight = getValidUserWeight(keyEarlier);
+                        if (userLiftedWeight !== null) break;
                     }
-                    if (prevLogged > 0) break;
-                }
-            }
-            if (prevLogged > 0) break;
+                    if (userLiftedWeight !== null) break;
 
-            // D. Fallback: calculate what previous week's formula target was
-            if (pExercises[exIdx] && pExercises[exIdx].Exercise === ex.Exercise) {
-                const pRes = calculateWeightFromPct(pExercises[exIdx]);
-                if (typeof pRes.val === 'number' && !isNaN(pRes.val) && pRes.val > 0) {
-                    prevLogged = pRes.val;
-                    break;
-                }
-            }
-        }
-    }
-
-    // 2. Cross-phase search if week 1 of a new phase
-    if (prevLogged === 0 && currentWeekIdx === 0) {
-        const phases = Object.keys(PROGRAM_DATA);
-        const currentPhaseIdx = phases.indexOf(phase);
-        if (currentPhaseIdx > 0) {
-            for (let p = currentPhaseIdx - 1; p >= 0; p--) {
-                const pPhase = phases[p];
-                const pWeeks = Object.keys(PROGRAM_DATA[pPhase] || {});
-                for (let w = pWeeks.length - 1; w >= 0; w--) {
-                    const pWeek = pWeeks[w];
-                    const pExercises = PROGRAM_DATA[pPhase]?.[pWeek]?.[day] || [];
+                    const pExercises = PROGRAM_DATA[phase]?.[pWeek]?.[day] || [];
                     for (let pIdx = 0; pIdx < pExercises.length; pIdx++) {
                         if (pExercises[pIdx].Exercise === ex.Exercise) {
                             for (let s = setNum; s >= 1; s--) {
-                                const keyEx = `${pPhase}_${pWeek}_${day}_${pIdx}_wt_s${s}`;
-                                const valEx = parseFloat(localStorage.getItem(keyEx));
-                                if (!isNaN(valEx) && valEx > 0) {
-                                    prevLogged = valEx;
-                                    break;
-                                }
+                                const keyEx = `${phase}_${pWeek}_${day}_${pIdx}_wt_s${s}`;
+                                userLiftedWeight = getValidUserWeight(keyEx);
+                                if (userLiftedWeight !== null) break;
                             }
-                            if (prevLogged > 0) break;
-
-                            const pRes = calculateWeightFromPct(pExercises[pIdx]);
-                            if (typeof pRes.val === 'number' && !isNaN(pRes.val) && pRes.val > 0) {
-                                prevLogged = pRes.val;
-                                break;
-                            }
+                            if (userLiftedWeight !== null) break;
                         }
                     }
-                    if (prevLogged > 0) break;
+                    if (userLiftedWeight !== null) break;
                 }
-                if (prevLogged > 0) break;
             }
+
+            if (userLiftedWeight === null && currentWeekIdx === 0) {
+                const phases = Object.keys(PROGRAM_DATA);
+                const currentPhaseIdx = phases.indexOf(phase);
+                if (currentPhaseIdx > 0) {
+                    for (let p = currentPhaseIdx - 1; p >= 0; p--) {
+                        const pPhase = phases[p];
+                        const pWeeks = Object.keys(PROGRAM_DATA[pPhase] || {});
+                        for (let w = pWeeks.length - 1; w >= 0; w--) {
+                            const pWeek = pWeeks[w];
+                            const pExercises = PROGRAM_DATA[pPhase]?.[pWeek]?.[day] || [];
+                            for (let pIdx = 0; pIdx < pExercises.length; pIdx++) {
+                                if (pExercises[pIdx].Exercise === ex.Exercise) {
+                                    for (let s = setNum; s >= 1; s--) {
+                                        const keyEx = `${pPhase}_${pWeek}_${day}_${pIdx}_wt_s${s}`;
+                                        userLiftedWeight = getValidUserWeight(keyEx);
+                                        if (userLiftedWeight !== null) break;
+                                    }
+                                    if (userLiftedWeight !== null) break;
+                                }
+                            }
+                            if (userLiftedWeight !== null) break;
+                        }
+                        if (userLiftedWeight !== null) break;
+                    }
+                }
+            }
+
+            if (userLiftedWeight === null && ex && ex.Exercise) {
+                const cleanName = ex.Exercise.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                userLiftedWeight = getValidUserWeight(`tx_ex_wt_${cleanName}_s${setNum}`) || getValidUserWeight(`tx_ex_wt_${cleanName}`);
+            }
+
+            if (userLiftedWeight !== null) {
+                return userLiftedWeight;
+            }
+
+            return res.val;
         }
-    }
-
-    if (prevLogged > 0) {
-        return currCalc > 0 ? Math.max(prevLogged, currCalc) : prevLogged;
-    }
-
-    return res.val;
-}
 
         function renderWorkout() {
             currentPhase = document.getElementById('phaseSelect').value;
