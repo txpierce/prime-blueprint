@@ -1431,94 +1431,72 @@
             return { val: wtStr || 'BW', tag: loadTag };
         }
 
-           function getPhaseMaxWeight(phase, week, day, exIdx, setNum, ex) {
+            function getPhaseMaxWeight(phase, week, day, exIdx, setNum, ex) {
             const res = calculateWeightFromPct(ex);
             const currCalc = (typeof res.val === 'number' && !isNaN(res.val)) ? res.val : 0;
-            const cleanName = (ex.Exercise || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 
-            let prevLoggedVal = null;
-            let prevLoggedNum = 0;
+            if (!PROGRAM_DATA || !PROGRAM_DATA[phase]) return res.val;
 
-            function testCandidate(cand) {
-                if (cand === null || cand === undefined) return false;
-                const str = String(cand).trim();
-                if (!str || str === 'undefined' || str === 'null') return false;
+            const weeks = Object.keys(PROGRAM_DATA[phase]);
+            if (!weeks.includes(week)) return res.val;
+            const currentWeekIdx = weeks.indexOf(week);
 
-                const num = parseFloat(str);
-                if (!isNaN(num) && num > 0) {
-                    if (num > prevLoggedNum) {
-                        prevLoggedNum = num;
-                        prevLoggedVal = str;
+            let prevLogged = 0;
+
+            // 1. Search previous weeks in current phase
+            if (currentWeekIdx > 0) {
+                for (let w = currentWeekIdx - 1; w >= 0; w--) {
+                    const pWeek = weeks[w];
+
+                    // A. Exact localStorage match for this set
+                    const keyExact = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${setNum}`;
+                    const valExact = parseFloat(localStorage.getItem(keyExact));
+                    if (!isNaN(valExact) && valExact > 0) {
+                        prevLogged = valExact;
+                        break;
                     }
-                    return true;
-                } else if (str.length > 0 && str !== 'BW' && !prevLoggedVal) {
-                    prevLoggedVal = str;
-                    return true;
-                }
-                return false;
-            }
 
-            // 1. Search prior weeks in current phase
-            if (PROGRAM_DATA && PROGRAM_DATA[phase]) {
-                const weeks = Object.keys(PROGRAM_DATA[phase]);
-                const currentWeekIdx = weeks.indexOf(week);
-
-                if (currentWeekIdx > 0) {
-                    for (let w = currentWeekIdx - 1; w >= 0; w--) {
-                        const pWeek = weeks[w];
-
-                        // A. Exact localStorage key for this set
-                        const keyExact = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${setNum}`;
-                        if (testCandidate(localStorage.getItem(keyExact))) break;
-
-                        // B. Earlier sets of this exercise in that previous week
-                        for (let s = setNum - 1; s >= 1; s--) {
-                            const keyEarlier = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${s}`;
-                            if (testCandidate(localStorage.getItem(keyEarlier))) break;
+                    // B. Fallback to earlier sets of this exercise in that previous week
+                    for (let s = setNum - 1; s >= 1; s--) {
+                        const keyEarlier = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${s}`;
+                        const valEarlier = parseFloat(localStorage.getItem(keyEarlier));
+                        if (!isNaN(valEarlier) && valEarlier > 0) {
+                            prevLogged = valEarlier;
+                            break;
                         }
-                        if (prevLoggedVal) break;
+                    }
+                    if (prevLogged > 0) break;
 
-                        // C. Match by exercise name in previous week
-                        const pExercises = PROGRAM_DATA[phase]?.[pWeek]?.[day] || [];
-                        for (let pIdx = 0; pIdx < pExercises.length; pIdx++) {
-                            if (pExercises[pIdx].Exercise === ex.Exercise) {
-                                for (let s = setNum; s >= 1; s--) {
-                                    const keyEx = `${phase}_${pWeek}_${day}_${pIdx}_wt_s${s}`;
-                                    if (testCandidate(localStorage.getItem(keyEx))) break;
+                    // C. Match by exercise name if exIdx changed
+                    const pExercises = PROGRAM_DATA[phase]?.[pWeek]?.[day] || [];
+                    for (let pIdx = 0; pIdx < pExercises.length; pIdx++) {
+                        if (pExercises[pIdx].Exercise === ex.Exercise) {
+                            for (let s = setNum; s >= 1; s--) {
+                                const keyEx = `${phase}_${pWeek}_${day}_${pIdx}_wt_s${s}`;
+                                const valEx = parseFloat(localStorage.getItem(keyEx));
+                                if (!isNaN(valEx) && valEx > 0) {
+                                    prevLogged = valEx;
+                                    break;
                                 }
-                                if (prevLoggedVal) break;
                             }
+                            if (prevLogged > 0) break;
                         }
-                        if (prevLoggedVal) break;
+                    }
+                    if (prevLogged > 0) break;
 
-                        // D. Fallback: previous week's calculated target formula
-                        if (pExercises[exIdx] && pExercises[exIdx].Exercise === ex.Exercise) {
-                            const pRes = calculateWeightFromPct(pExercises[exIdx]);
-                            if (testCandidate(pRes.val)) break;
+                    // D. Fallback: calculate what previous week's formula target was!
+                    if (pExercises[exIdx] && pExercises[exIdx].Exercise === ex.Exercise) {
+                        const pRes = calculateWeightFromPct(pExercises[exIdx]);
+                        if (typeof pRes.val === 'number' && !isNaN(pRes.val) && pRes.val > 0) {
+                            prevLogged = pRes.val;
+                            break;
                         }
                     }
                 }
             }
 
-            // 2. Persistent global exercise keys
-            if (!prevLoggedVal && cleanName) {
-                testCandidate(localStorage.getItem(`tx_ex_wt_${cleanName}_s${setNum}`));
-                if (!prevLoggedVal) testCandidate(localStorage.getItem(`tx_ex_wt_${cleanName}_s1`));
-                if (!prevLoggedVal) testCandidate(localStorage.getItem(`tx_ex_wt_${cleanName}`));
-            }
-
-            // 3. Scan ALL localStorage keys matching set number
-            if (!prevLoggedVal) {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i);
-                    if (k && k.includes(`_${exIdx}_wt_s${setNum}`)) {
-                        if (testCandidate(localStorage.getItem(k))) break;
-                    }
-                }
-            }
-
-            // 4. Cross-phase search if week 1 of a new phase
-            if (!prevLoggedVal && PROGRAM_DATA) {
+            // 2. Cross-phase search if week 1 of a new phase
+            if (prevLogged === 0 && currentWeekIdx === 0) {
                 const phases = Object.keys(PROGRAM_DATA);
                 const currentPhaseIdx = phases.indexOf(phase);
                 if (currentPhaseIdx > 0) {
@@ -1532,26 +1510,30 @@
                                 if (pExercises[pIdx].Exercise === ex.Exercise) {
                                     for (let s = setNum; s >= 1; s--) {
                                         const keyEx = `${pPhase}_${pWeek}_${day}_${pIdx}_wt_s${s}`;
-                                        if (testCandidate(localStorage.getItem(keyEx))) break;
+                                        const valEx = parseFloat(localStorage.getItem(keyEx));
+                                        if (!isNaN(valEx) && valEx > 0) {
+                                            prevLogged = valEx;
+                                            break;
+                                        }
                                     }
-                                    if (prevLoggedVal) break;
+                                    if (prevLogged > 0) break;
 
                                     const pRes = calculateWeightFromPct(pExercises[pIdx]);
-                                    if (testCandidate(pRes.val)) break;
+                                    if (typeof pRes.val === 'number' && !isNaN(pRes.val) && pRes.val > 0) {
+                                        prevLogged = pRes.val;
+                                        break;
+                                    }
                                 }
                             }
-                            if (prevLoggedVal) break;
+                            if (prevLogged > 0) break;
                         }
-                        if (prevLoggedVal) break;
+                        if (prevLogged > 0) break;
                     }
                 }
             }
 
-            if (prevLoggedVal !== null) {
-                if (prevLoggedNum > 0) {
-                    return currCalc > 0 ? Math.max(prevLoggedNum, currCalc) : prevLoggedNum;
-                }
-                return prevLoggedVal;
+            if (prevLogged > 0) {
+                return currCalc > 0 ? Math.max(prevLogged, currCalc) : prevLogged;
             }
 
             return res.val;
