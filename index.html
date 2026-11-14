@@ -1431,20 +1431,75 @@
             return { val: wtStr || 'BW', tag: loadTag };
         }
 
-        function getPhaseMaxWeight(phase, exIdx, setNum, ex) {
-            let maxLogged = 0;
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith(`${phase}_`) && key.endsWith(`_${exIdx}_wt_s${setNum}`)) {
-                    const val = parseFloat(localStorage.getItem(key));
-                    if (!isNaN(val) && val > maxLogged) {
-                        maxLogged = val;
+          function getPhaseMaxWeight(phase, week, day, exIdx, setNum, ex) {
+            const res = calculateWeightFromPct(ex);
+            const baseTarget = (typeof res.val === 'number' && !isNaN(res.val)) ? res.val : 0;
+
+            if (!PROGRAM_DATA || !PROGRAM_DATA[phase]) return res.val;
+
+            const weeks = Object.keys(PROGRAM_DATA[phase]);
+            const currentWeekIdx = weeks.indexOf(week);
+
+            let prevLogged = 0;
+
+            // 1. Search prior weeks in current phase
+            if (currentWeekIdx > 0) {
+                for (let w = currentWeekIdx - 1; w >= 0; w--) {
+                    const pWeek = weeks[w];
+                    const keyExact = `${phase}_${pWeek}_${day}_${exIdx}_wt_s${setNum}`;
+                    const valExact = parseFloat(localStorage.getItem(keyExact));
+                    if (!isNaN(valExact) && valExact > 0) {
+                        prevLogged = valExact;
+                        break;
+                    }
+
+                    const pExercises = PROGRAM_DATA[phase]?.[pWeek]?.[day] || [];
+                    for (let pIdx = 0; pIdx < pExercises.length; pIdx++) {
+                        if (pExercises[pIdx].Exercise === ex.Exercise) {
+                            const keyEx = `${phase}_${pWeek}_${day}_${pIdx}_wt_s${setNum}`;
+                            const valEx = parseFloat(localStorage.getItem(keyEx));
+                            if (!isNaN(valEx) && valEx > 0) {
+                                prevLogged = valEx;
+                                break;
+                            }
+                        }
+                    }
+                    if (prevLogged > 0) break;
+                }
+            }
+
+            // 2. Cross-phase search if no prior week logged in current phase
+            if (prevLogged === 0) {
+                const phases = Object.keys(PROGRAM_DATA);
+                const currentPhaseIdx = phases.indexOf(phase);
+                if (currentPhaseIdx > 0) {
+                    for (let p = currentPhaseIdx - 1; p >= 0; p--) {
+                        const pPhase = phases[p];
+                        const pWeeks = Object.keys(PROGRAM_DATA[pPhase] || {});
+                        for (let w = pWeeks.length - 1; w >= 0; w--) {
+                            const pWeek = pWeeks[w];
+                            const pExercises = PROGRAM_DATA[pPhase]?.[pWeek]?.[day] || [];
+                            for (let pIdx = 0; pIdx < pExercises.length; pIdx++) {
+                                if (pExercises[pIdx].Exercise === ex.Exercise) {
+                                    const keyEx = `${pPhase}_${pWeek}_${day}_${pIdx}_wt_s${setNum}`;
+                                    const valEx = parseFloat(localStorage.getItem(keyEx));
+                                    if (!isNaN(valEx) && valEx > 0) {
+                                        prevLogged = valEx;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (prevLogged > 0) break;
+                        }
+                        if (prevLogged > 0) break;
                     }
                 }
             }
-            if (maxLogged > 0) return maxLogged;
 
-            const res = calculateWeightFromPct(ex);
+            if (prevLogged > 0) {
+                return baseTarget > 0 ? Math.max(prevLogged, baseTarget) : prevLogged;
+            }
+
             return res.val;
         }
 
