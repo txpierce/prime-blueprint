@@ -419,9 +419,9 @@
                     <p class="text-[11px] text-slate-400 mt-0.5">Manage custom compounds, BAC dilution math, dosing, and daily intake logging.</p>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                    <button onclick="openPeptideCalcModal()" class="bg-slate-950 hover:bg-slate-800 text-cyan-400 border border-cyan-500/40 font-bold text-xs px-3 py-2 rounded-xl transition shadow flex items-center gap-1.5">
-                        <span>🧮</span> Peptide Calc
-                    </button>
+                    <a href="https://www.peptideschedule.com/calculator" target="_blank" rel="noopener noreferrer" class="bg-slate-950 hover:bg-slate-800 text-cyan-400 border border-cyan-500/40 font-bold text-xs px-3 py-2 rounded-xl transition shadow inline-flex items-center gap-1.5">
+                        <span>🧮</span> Peptide Calc ↗
+                    </a>
                     <button onclick="openPeptideModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-3 py-2 rounded-xl transition shadow electric-glow">+ Add Compound</button>
                 </div>
             </div>
@@ -1868,6 +1868,16 @@
             renderDashboardWidgets();
         }
 
+
+        function openPeptideCalcModal() {
+            window.open('https://www.peptideschedule.com/calculator', '_blank', 'noopener,noreferrer');
+        }
+
+        function closePeptideCalcModal() {
+            const modal = document.getElementById('peptideCalcModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
         function openPeptideModal(id = null) {
             editingPeptideId = id;
             const modalTitle = document.getElementById('peptideModalTitle');
@@ -2559,7 +2569,6 @@
         </div>
     </div>
 
-   
     <!-- PEPTIDE CALCULATOR MODAL -->
     <div id="peptideCalcModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto" onclick="if(event.target===this) closePeptideCalcModal();">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
